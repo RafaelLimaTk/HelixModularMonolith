@@ -128,7 +128,10 @@ public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTest
     [Trait("Chat/Domain", "Message - Entities")]
     public void MarkAsDeliveredWhenAlreadyDeliveredReturnsFalse()
     {
-        var entity = new DomainEntity.Message(_fixture.GetValidConversationId(), _fixture.GetValidSenderId(), _fixture.GetValidContent());
+        var entity = new DomainEntity.Message(
+            _fixture.GetValidConversationId(),
+            _fixture.GetValidSenderId(),
+            _fixture.GetValidContent());
         entity.MarkAsDelivered();
 
         var changed = entity.MarkAsDelivered();
@@ -140,7 +143,10 @@ public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTest
     [Trait("Chat/Domain", "Message - Entities")]
     public void MarkAsReadWhenFromDeliveredChangesStatusAndTimestamp()
     {
-        var entity = new DomainEntity.Message(_fixture.GetValidConversationId(), _fixture.GetValidSenderId(), _fixture.GetValidContent());
+        var entity = new DomainEntity.Message(
+            _fixture.GetValidConversationId(),
+            _fixture.GetValidSenderId(),
+            _fixture.GetValidContent());
         entity.MarkAsDelivered();
 
         var changed = entity.MarkAsRead();
@@ -154,7 +160,10 @@ public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTest
     [Trait("Chat/Domain", "Message - Entities")]
     public void MarkAsReadThrowWhenFromSentState()
     {
-        var entity = new DomainEntity.Message(_fixture.GetValidConversationId(), _fixture.GetValidSenderId(), _fixture.GetValidContent());
+        var entity = new DomainEntity.Message(
+            _fixture.GetValidConversationId(),
+            _fixture.GetValidSenderId(),
+            _fixture.GetValidContent());
 
         Action action = () => entity.MarkAsRead();
 
@@ -166,7 +175,10 @@ public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTest
     [Trait("Chat/Domain", "Message - Entities")]
     public void MarkAsReadWhenAlreadyReadReturnsFalse()
     {
-        var entity = new DomainEntity.Message(_fixture.GetValidConversationId(), _fixture.GetValidSenderId(), _fixture.GetValidContent());
+        var entity = new DomainEntity.Message(
+            _fixture.GetValidConversationId(),
+            _fixture.GetValidSenderId(),
+            _fixture.GetValidContent());
         entity.MarkAsDelivered();
         entity.MarkAsRead();
 
