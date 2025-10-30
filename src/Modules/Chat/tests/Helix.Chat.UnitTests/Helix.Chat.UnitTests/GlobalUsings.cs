@@ -1,0 +1,5 @@
+﻿global using Bogus;
+global using FluentAssertions;
+global using Helix.Chat.UnitTests.Common;
+global using System.Text;
+global using DomainEntity = Helix.Chat.Domain.Entities;
