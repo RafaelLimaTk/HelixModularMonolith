@@ -1,4 +1,5 @@
 ﻿using Helix.Chat.Domain.Enums;
+using Helix.Chat.Domain.Events.Conversation;
 using Shared.Domain.Exceptions;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
@@ -154,7 +155,28 @@ public class ConversationTest(ConversationTestFixture fixture) : IClassFixture<C
         message.SenderId.Should().Be(senderId);
         message.Content.Should().Be(content);
         message.Status.Should().Be(MessageStatus.Sent);
-        message.SentAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+        message.SentAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2)); ;
+    }
+
+    [Fact(DisplayName = nameof(SendMessageRaiseMessageSentDomainEvent))]
+    [Trait("Chat/Domain", "Conversation - Aggregates")]
+    public void SendMessageRaiseMessageSentDomainEvent()
+    {
+        var aggregate = new DomainEntity.Conversation(_fixture.GetValidTitle());
+        var senderId = _fixture.GetValidUserId();
+        aggregate.AddParticipant(senderId);
+        var content = _fixture.GetValidContent();
+
+        var _ = aggregate.SendMessage(senderId, content);
+
+        aggregate.Events.Should().HaveCount(1);
+        var evt = aggregate.Events.First().Should().BeOfType<MessageSent>().Subject;
+
+        evt.MessageId.Should().NotBe(Guid.Empty);
+        evt.ConversationId.Should().Be(aggregate.Id);
+        evt.SenderId.Should().Be(senderId);
+        evt.Content.Should().Be(content);
+        evt.OccuredOn.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
     }
 
     [Fact(DisplayName = nameof(SendMessageThrowWhenSenderIsNotParticipant))]

@@ -1,4 +1,5 @@
-﻿using Helix.Chat.Domain.ValueObjects;
+﻿using Helix.Chat.Domain.Events.Conversation;
+using Helix.Chat.Domain.ValueObjects;
 using Shared.Domain.Exceptions;
 using Shared.Domain.SeedWorks;
 using Shared.Domain.Validations;
@@ -39,7 +40,16 @@ public sealed class Conversation : AggregateRoot
         if (!_participantIds.Contains(senderId))
             throw new EntityValidationException("SenderId must be a participant of the conversation");
 
-        return new Message(this.Id, senderId, content);
+        var message = new Message(this.Id, senderId, content);
+
+        RaiseEvent(new MessageSent(
+            message.Id,
+            this.Id,
+            senderId,
+            message.Content,
+            message.SentAt));
+
+        return message;
     }
 
     private void Validate()

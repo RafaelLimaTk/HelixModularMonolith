@@ -5,6 +5,8 @@ public class ConversationTestFixture : BaseFixture
     public string GetValidTitle()
         => Faker.Lorem.Sentence(3).Trim();
 
+    public string GetValidContent() => Faker.Lorem.Sentence();
+
     public string GetShortTitle(int len)
     {
         if (len <= 0) return string.Empty;
