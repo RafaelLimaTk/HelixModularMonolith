@@ -1,4 +1,5 @@
-﻿using Shared.Domain.Exceptions;
+﻿using Helix.Chat.Domain.Enums;
+using Shared.Domain.Exceptions;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
 
@@ -90,7 +91,7 @@ public class ConversationTest(ConversationTestFixture fixture) : IClassFixture<C
 
         for (int i = 0; i < numberOfTests; i++)
         {
-            var extra = (i == 0) ? 1 : rnd.Next(1, 50);
+            var extra = (i == 0) ? 1 : rnd.Next(1, 255);
             var len = DomainEntity.Conversation.MAX_LENGTH + extra;
             yield return new object[] { fixture.GetLongTitle(len) };
         }
@@ -135,5 +136,54 @@ public class ConversationTest(ConversationTestFixture fixture) : IClassFixture<C
 
         act.Should().Throw<EntityValidationException>()
            .WithMessage("UserId should not be null");
+    }
+
+    [Fact(DisplayName = nameof(SendMessageCreatesMessageWithSentStatus))]
+    [Trait("Chat/Domain", "Conversation - Aggregates")]
+    public void SendMessageCreatesMessageWithSentStatus()
+    {
+        var aggregate = new DomainEntity.Conversation(_fixture.GetValidTitle());
+        var senderId = _fixture.GetValidUserId();
+        aggregate.AddParticipant(senderId);
+        var content = "hello world";
+
+        var message = aggregate.SendMessage(senderId, content);
+
+        message.Id.Should().NotBe(Guid.Empty);
+        message.ConversationId.Should().Be(aggregate.Id);
+        message.SenderId.Should().Be(senderId);
+        message.Content.Should().Be(content);
+        message.Status.Should().Be(MessageStatus.Sent);
+        message.SentAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+    }
+
+    [Fact(DisplayName = nameof(SendMessageThrowWhenSenderIsNotParticipant))]
+    [Trait("Chat/Domain", "Conversation - Aggregates")]
+    public void SendMessageThrowWhenSenderIsNotParticipant()
+    {
+        var aggregate = new DomainEntity.Conversation(_fixture.GetValidTitle());
+        var nonParticipant = _fixture.GetValidUserId();
+
+        Action action = () => aggregate.SendMessage(nonParticipant, "oi");
+
+        action.Should()
+            .Throw<EntityValidationException>()
+            .WithMessage("SenderId must be a participant of the conversation");
+    }
+
+    [Fact(DisplayName = nameof(SendMessageErrorWhenContentIsGreaterThanMaxCharacters))]
+    [Trait("Chat/Domain", "Conversation - Aggregates")]
+    public void SendMessageErrorWhenContentIsGreaterThanMaxCharacters()
+    {
+        var aggregate = new DomainEntity.Conversation(_fixture.GetValidTitle());
+        var senderId = _fixture.GetValidUserId();
+        aggregate.AddParticipant(senderId);
+        var tooLong = new string('x', DomainEntity.Message.MAX_LENGTH + 1);
+
+        Action action = () => aggregate.SendMessage(senderId, tooLong);
+
+        action.Should()
+            .Throw<EntityValidationException>()
+            .WithMessage($"Content should be at most {DomainEntity.Message.MAX_LENGTH} characters long");
     }
 }

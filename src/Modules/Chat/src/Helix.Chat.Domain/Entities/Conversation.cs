@@ -34,6 +34,14 @@ public sealed class Conversation : AggregateRoot
         return true;
     }
 
+    public Message SendMessage(Guid senderId, string content)
+    {
+        if (!_participantIds.Contains(senderId))
+            throw new EntityValidationException("SenderId must be a participant of the conversation");
+
+        return new Message(this.Id, senderId, content);
+    }
+
     private void Validate()
     {
         DomainValidation.NotNullOrEmpty(Title, nameof(Title));
