@@ -1,5 +1,6 @@
 ﻿using Helix.Chat.Application.UseCases.Conversation.SendMessage;
 using Helix.Chat.Domain.Entities;
+using Helix.Chat.Domain.Enums;
 using Helix.Chat.Domain.Events.Conversation;
 using Helix.Chat.UnitTests.Extensions.DateTime;
 using UseCase = Helix.Chat.Application.UseCases.Conversation.SendMessage;
@@ -230,6 +231,60 @@ public class SendMessageTest(SendMessageTestFixture fixture)
             yield return new object[] { fixture.GetLongContent(len) };
         }
     }
+
+    [Fact(DisplayName = nameof(InsertedMessageHasSentStatus))]
+    [Trait("Chat/Application", "SendMessage - Use Cases")]
+    public async Task InsertedMessageHasSentStatus()
+    {
+        var listParticipants = _fixture.GetParticipantIds();
+        var exampleConversation = _fixture.GetConversationExample(userIds: listParticipants);
+        var sender = listParticipants.First();
+        var request = new SendMessageInput(
+            exampleConversation.Id,
+            sender,
+            _fixture.GetValidContent()
+        );
+        var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
+        var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
+        var unitOfWorkMock = _fixture.GetUnitOfWorkMock();
+        conversationRepositoryMock.Setup(x => x.Get(
+            It.Is<Guid>(id => id == request.ConversationId),
+            It.IsAny<CancellationToken>()
+        )).ReturnsAsync(exampleConversation);
+        Message? capturedMessage = null;
+        messageRepositoryMock.Setup(x => x.Insert(
+            It.IsAny<Message>(),
+            It.IsAny<CancellationToken>()
+        )).Callback<Message, CancellationToken>((m, ct) => capturedMessage = m)
+          .Returns(Task.CompletedTask);
+        var useCase = new UseCase.SendMessage(
+            conversationRepositoryMock.Object,
+            messageRepositoryMock.Object,
+            unitOfWorkMock.Object
+        );
+
+        var response = await useCase.Handle(request, CancellationToken.None);
+
+        capturedMessage.Should().NotBeNull();
+        capturedMessage.Id.Should().Be(response.MessageId);
+        capturedMessage.ConversationId.Should().Be(exampleConversation.Id);
+        capturedMessage.SenderId.Should().Be(request.SenderId);
+        capturedMessage.Content.Should().Be(request.Content);
+        capturedMessage.Status.Should().Be(MessageStatus.Sent);
+
+        messageRepositoryMock.Verify(
+            x => x.Insert(
+                It.IsAny<Message>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
+        unitOfWorkMock.Verify(
+            x => x.Commit(It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
 
     [Fact(DisplayName = nameof(SendMessageRaiseMessageSentDomainEvent))]
     [Trait("Chat/Application", "SendMessage - Use Cases")]
