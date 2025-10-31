@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Helix.Chat.Application\Helix.Chat.Application.csproj" />
     <ProjectReference Include="..\..\..\src\Helix.Chat.Domain\Helix.Chat.Domain.csproj" />
   </ItemGroup>
 

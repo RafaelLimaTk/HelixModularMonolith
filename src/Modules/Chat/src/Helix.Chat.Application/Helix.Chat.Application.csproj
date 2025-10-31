@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\Shared.Application\Shared.Application.csproj" />
+    <ProjectReference Include="..\Helix.Chat.Domain\Helix.Chat.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
