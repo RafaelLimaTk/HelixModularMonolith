@@ -1,4 +1,10 @@
 ﻿namespace Helix.Chat.UnitTests.Domain.Entities.Message;
+
+[CollectionDefinition(nameof(MessageTestFixture))]
+public class MessageTestFixtureCollection
+    : ICollectionFixture<MessageTestFixture>
+{ }
+
 public class MessageTestFixture : BaseFixture
 {
     public Guid GetValidConversationId() => Guid.NewGuid();

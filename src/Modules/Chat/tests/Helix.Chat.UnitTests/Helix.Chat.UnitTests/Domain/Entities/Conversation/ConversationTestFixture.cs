@@ -1,5 +1,10 @@
 ﻿namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
 
+[CollectionDefinition(nameof(ConversationTestFixture))]
+public class ConversationTestFixtureCollection
+    : ICollectionFixture<ConversationTestFixture>
+{ }
+
 public class ConversationTestFixture : BaseFixture
 {
     public string GetValidTitle()

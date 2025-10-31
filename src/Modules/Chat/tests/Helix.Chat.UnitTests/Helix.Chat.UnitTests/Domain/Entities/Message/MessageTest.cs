@@ -1,7 +1,9 @@
 ﻿using Helix.Chat.Domain.Enums;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Message;
-public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTestFixture>
+
+[Collection(nameof(MessageTestFixture))]
+public class MessageTest(MessageTestFixture fixture)
 {
     private readonly MessageTestFixture _fixture = fixture;
 
@@ -100,7 +102,7 @@ public class MessageTest(MessageTestFixture fixture) : IClassFixture<MessageTest
 
         for (int i = 0; i < numberOfTests; i++)
         {
-            var extra = (i == 0) ? 1 : rnd.Next(20, 255);
+            var extra = (i == 0) ? 1 : rnd.Next(1, 255);
             var len = DomainEntity.Message.MAX_LENGTH + extra;
             yield return new object[] { fixture.GetLongContent(len) };
         }

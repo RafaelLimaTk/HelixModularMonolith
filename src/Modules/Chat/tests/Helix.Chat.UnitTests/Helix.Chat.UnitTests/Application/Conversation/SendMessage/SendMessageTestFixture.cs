@@ -1,6 +1,12 @@
 ﻿using Helix.Chat.UnitTests.Application.Conversation.Common;
 
 namespace Helix.Chat.UnitTests.Application.Conversation.SendMessage;
+
+[CollectionDefinition(nameof(SendMessageTestFixture))]
+public class SendMessageTestFixtureCollection
+    : ICollectionFixture<SendMessageTestFixture>
+{ }
+
 public class SendMessageTestFixture
     : ConversationUseCasesBaseFixture
 {
