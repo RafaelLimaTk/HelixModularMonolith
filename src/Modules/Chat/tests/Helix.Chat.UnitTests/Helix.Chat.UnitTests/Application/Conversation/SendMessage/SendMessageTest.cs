@@ -162,4 +162,69 @@ public class SendMessageTest(SendMessageTestFixture fixture) : IClassFixture<Sen
             Times.Never
         );
     }
+
+    [Theory(DisplayName = nameof(ThrowIfContentIsGreaterThanMaxLength))]
+    [Trait("Chat/Application", "SendMessage - Use Cases")]
+    [MemberData(nameof(GetContentGreaterThanMaxLength), parameters: 6)]
+    public async Task ThrowIfContentIsGreaterThanMaxLength(string tooLongContent)
+    {
+        var listParticipants = _fixture.GetParticipantIds();
+        var exampleConversation = _fixture.GetConversationExample(userIds: listParticipants);
+        var sender = listParticipants.First();
+        var request = new SendMessageInput(
+            exampleConversation.Id,
+            sender,
+            tooLongContent
+        );
+        var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
+        var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
+        var unitOfWorkMock = _fixture.GetUnitOfWorkMock();
+        conversationRepositoryMock.Setup(x => x.Get(
+            It.Is<Guid>(id => id == request.ConversationId),
+            It.IsAny<CancellationToken>()
+        )).ReturnsAsync(exampleConversation);
+        var useCase = new UseCase.SendMessage(
+            conversationRepositoryMock.Object,
+            messageRepositoryMock.Object,
+            unitOfWorkMock.Object
+        );
+
+        Func<Task> act = async ()
+            => await useCase.Handle(request, CancellationToken.None);
+
+        await act.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage($"Content should be at most {Message.MAX_LENGTH} characters long");
+
+        conversationRepositoryMock.Verify(
+            x => x.Get(
+                It.Is<Guid>(id => id == request.ConversationId),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
+        messageRepositoryMock.Verify(
+            x => x.Insert(
+                It.IsAny<Message>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Never
+        );
+        unitOfWorkMock.Verify(
+            x => x.Commit(It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
+    public static IEnumerable<object[]> GetContentGreaterThanMaxLength(int numberOfTests = 6)
+    {
+        var fixture = new SendMessageTestFixture();
+        var rnd = new Random();
+
+        for (int testIndex = 0; testIndex < numberOfTests; testIndex++)
+        {
+            var extra = (testIndex == 0) ? 1 : rnd.Next(1, 128);
+            var len = Message.MAX_LENGTH + extra;
+            yield return new object[] { fixture.GetLongContent(len) };
+        }
+    }
 }

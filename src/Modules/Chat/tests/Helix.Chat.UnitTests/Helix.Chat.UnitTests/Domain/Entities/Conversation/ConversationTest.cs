@@ -1,6 +1,5 @@
 ﻿using Helix.Chat.Domain.Enums;
 using Helix.Chat.Domain.Events.Conversation;
-using Shared.Domain.Exceptions;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
 
@@ -92,7 +91,7 @@ public class ConversationTest(ConversationTestFixture fixture) : IClassFixture<C
 
         for (int i = 0; i < numberOfTests; i++)
         {
-            var extra = (i == 0) ? 1 : rnd.Next(1, 255);
+            var extra = (i == 0) ? 1 : rnd.Next(20, 128);
             var len = DomainEntity.Conversation.MAX_LENGTH + extra;
             yield return new object[] { fixture.GetLongTitle(len) };
         }
