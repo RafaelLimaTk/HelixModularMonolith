@@ -2,6 +2,8 @@
 global using FluentAssertions;
 global using Helix.Chat.UnitTests.Common;
 global using Moq;
+global using Shared.Application.Exceptions;
 global using Shared.Application.Interfaces;
+global using Shared.Domain.Exceptions;
 global using System.Text;
 global using DomainEntity = Helix.Chat.Domain.Entities;
