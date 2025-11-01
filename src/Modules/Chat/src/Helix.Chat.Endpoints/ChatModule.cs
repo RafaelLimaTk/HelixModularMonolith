@@ -10,6 +10,7 @@ public static class ChatModule
         IConfiguration configuration)
     {
         services.AddMediatRWithAssemblies(ChatAssemblies.All);
+        services.AddDomainEventsWithAssemblies(ChatAssemblies.All);
         return services;
     }
 
