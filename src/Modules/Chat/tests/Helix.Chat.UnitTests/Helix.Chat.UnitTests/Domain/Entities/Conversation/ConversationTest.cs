@@ -136,7 +136,7 @@ public class ConversationTest(ConversationTestFixture fixture)
         var act = () => aggregate.AddParticipant(emptyUserId);
 
         act.Should().Throw<EntityValidationException>()
-           .WithMessage("UserId should not be null");
+           .WithMessage("UserId should not be empty");
     }
 
     [Fact(DisplayName = nameof(SendMessageCreatesMessageWithSentStatus))]

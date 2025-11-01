@@ -27,7 +27,7 @@ public sealed class Conversation : AggregateRoot
     public bool AddParticipant(Guid userId)
     {
         if (userId == Guid.Empty)
-            throw new EntityValidationException("UserId should not be null");
+            throw new EntityValidationException("UserId should not be empty");
 
         if (!_participantIds.Add(userId)) return false;
         _participants.Add(new Participant(userId, DateTime.UtcNow));
