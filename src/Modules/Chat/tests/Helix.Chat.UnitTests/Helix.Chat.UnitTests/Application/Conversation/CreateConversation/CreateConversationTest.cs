@@ -42,4 +42,79 @@ public class CreateConversationTest : BaseFixture
             It.IsAny<CancellationToken>()
         ), Times.Once);
     }
+
+    [Fact(DisplayName = nameof(ThrowWhenTitleIsEmpty))]
+    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    public async Task ThrowWhenTitleIsEmpty()
+    {
+        var repository = new Mock<IConversationRepository>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var useCase = new UseCase.CreateConversation(repository.Object, unitOfWork.Object);
+        var input = new CreateConversationInput(string.Empty);
+
+        Func<Task> action = async ()
+            => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage("Title should not be null or empty");
+        repository.Verify(r => r.Insert(
+            It.IsAny<DomainEntity.Conversation>(),
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+        unitOfWork.Verify(u => u.Commit(
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+    }
+
+    [Theory(DisplayName = nameof(ThrowWhenTitleIsLessThan3Characters))]
+    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [InlineData("a")]
+    [InlineData("ab")]
+    public async Task ThrowWhenTitleIsLessThan3Characters(string title)
+    {
+        var repository = new Mock<IConversationRepository>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var useCase = new UseCase.CreateConversation(repository.Object, unitOfWork.Object);
+        var input = new CreateConversationInput(title);
+
+        Func<Task> action = async ()
+            => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage("Title should be at least 3 characters long");
+        repository.Verify(r => r.Insert(
+            It.IsAny<DomainEntity.Conversation>(),
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+        unitOfWork.Verify(u => u.Commit(
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+    }
+
+    [Theory(DisplayName = nameof(ThrowWhenTitleIsGreaterThanMaxCharacters))]
+    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [InlineData(1)]
+    [InlineData(10)]
+    public async Task ThrowWhenTitleIsGreaterThanMaxCharacters(int excess)
+    {
+        var repository = new Mock<IConversationRepository>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+        var useCase = new UseCase.CreateConversation(repository.Object, unitOfWork.Object);
+        var maxLength = DomainEntity.Conversation.MAX_LENGTH;
+        var invalidTitle = new string('a', maxLength + excess);
+        var input = new CreateConversationInput(invalidTitle);
+
+        Func<Task> action = async ()
+            => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage($"Title should be at most {maxLength} characters long");
+        repository.Verify(r => r.Insert(
+            It.IsAny<DomainEntity.Conversation>(),
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+        unitOfWork.Verify(u => u.Commit(
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+    }
 }
