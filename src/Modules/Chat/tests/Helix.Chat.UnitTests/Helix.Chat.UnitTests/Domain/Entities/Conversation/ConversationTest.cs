@@ -61,7 +61,7 @@ public class ConversationTest(ConversationTestFixture fixture)
     [Trait("Chat/Domain", "Conversation - Aggregates")]
     public void InstantiateWhenEqualToMaxLength()
     {
-        var title = _fixture.GetLongTitle(DomainEntity.Conversation.MAX_LENGTH);
+        var title = _fixture.GetShortTitle(DomainEntity.Conversation.MAX_LENGTH);
 
         Action action = () => new DomainEntity.Conversation(title);
         action.Should().NotThrow();

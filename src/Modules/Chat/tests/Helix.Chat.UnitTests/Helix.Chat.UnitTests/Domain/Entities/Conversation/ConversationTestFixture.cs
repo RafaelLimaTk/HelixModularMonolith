@@ -28,19 +28,29 @@ public class ConversationTestFixture : BaseFixture
         return builder.ToString()[..len];
     }
 
-    public string GetLongTitle(int len)
+    public string GetLongTitle(int lenghtTitle = 128)
     {
-        if (len <= 0) return string.Empty;
-
-        var sentence = Faker.Lorem.Sentence(Math.Max(2, len / 10));
-        if (sentence.Length >= len) return sentence[..len].Trim();
-
-        var builder = new StringBuilder(sentence);
-        while (builder.Length < len)
+        var builder = new StringBuilder();
+        while (builder.Length < lenghtTitle)
         {
-            builder.Append(' ').Append(Faker.Lorem.Word());
+            var word = Faker.Lorem.Word().Trim();
+            if (word.Length == 0) continue;
+
+            if (builder.Length > 0)
+                builder.Append(' ');
+
+            builder.Append(word);
         }
-        return builder.ToString()[..len].Trim();
+
+        var result = builder.ToString().Trim();
+        if (result.Length <= lenghtTitle)
+        {
+            var extra = Faker.Lorem.Word().Trim();
+            if (extra.Length > 0)
+                result = string.Concat(result, " ", extra);
+        }
+
+        return result.Trim();
     }
 
     public Guid GetValidUserId() => Guid.NewGuid();

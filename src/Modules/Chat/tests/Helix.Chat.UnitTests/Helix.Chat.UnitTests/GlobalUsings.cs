@@ -7,3 +7,4 @@ global using Shared.Application.Interfaces;
 global using Shared.Domain.Exceptions;
 global using System.Text;
 global using DomainEntity = Helix.Chat.Domain.Entities;
+global using Event = Shared.Domain.SeedWorks;

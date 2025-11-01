@@ -74,7 +74,7 @@ public class MessageTest(MessageTestFixture fixture)
     {
         var conversationId = _fixture.GetValidConversationId();
         var senderId = _fixture.GetValidSenderId();
-        var content = _fixture.GetLongContent(DomainEntity.Message.MAX_LENGTH);
+        var content = _fixture.GetValidContent(DomainEntity.Message.MAX_LENGTH);
 
         Action act = () => new DomainEntity.Message(conversationId, senderId, content);
         act.Should().NotThrow();
