@@ -313,10 +313,11 @@ public class SendMessageTest(SendMessageTestFixture fixture)
 
         var before = DateTime.UtcNow.TrimMilliseconds();
         var response = await useCase.Handle(request, CancellationToken.None);
+        var after = DateTime.UtcNow.TrimMilliseconds();
 
         response.Should().NotBeNull();
         response.MessageId.Should().NotBeEmpty();
-        response.SentAt.TrimMilliseconds().Should().Be(before);
+        response.SentAt.TrimMilliseconds().Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         exampleConversation.Events.Should().NotBeNull();
         exampleConversation.Events.Should().HaveCount(1);
         var @event = exampleConversation.Events.First().Should().BeOfType<MessageSent>().Subject;
@@ -324,7 +325,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         @event.ConversationId.Should().Be(exampleConversation.Id);
         @event.SenderId.Should().Be(sender);
         @event.Content.Should().Be(request.Content);
-        @event.SentAt.TrimMilliseconds().Should().Be(before);
+        @event.SentAt.TrimMilliseconds().Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         conversationRepositoryMock.Verify(
             x => x.Get(
                 It.Is<Guid>(id => id == request.ConversationId),
