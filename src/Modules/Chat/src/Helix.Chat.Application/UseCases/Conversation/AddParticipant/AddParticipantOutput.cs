@@ -1,5 +1,5 @@
 ﻿namespace Helix.Chat.Application.UseCases.Conversation.AddParticipant;
-public record AddParticipantOutput(
+public sealed record AddParticipantOutput(
     Guid ConversationId,
     Guid UserId,
     DateTime JoinedAt,

@@ -1,5 +1,4 @@
 ﻿using Helix.Chat.Application.UseCases.Conversation.SendMessage;
-using Helix.Chat.Domain.Entities;
 using Helix.Chat.Domain.Enums;
 using Helix.Chat.Domain.Events.Conversation;
 using Helix.Chat.UnitTests.Extensions.DateTime;
@@ -55,7 +54,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         );
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.Is<Message>(m =>
+                It.Is<DomainEntity.Message>(m =>
                     m.ConversationId == request.ConversationId &&
                     m.SenderId == request.SenderId &&
                     m.Content == request.Content
@@ -103,7 +102,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         );
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.IsAny<Message>(),
+                It.IsAny<DomainEntity.Message>(),
                 It.IsAny<CancellationToken>()
             ),
             Times.Never
@@ -156,7 +155,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         );
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.IsAny<Message>(),
+                It.IsAny<DomainEntity.Message>(),
                 It.IsAny<CancellationToken>()
             ),
             Times.Never
@@ -197,7 +196,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
             => await useCase.Handle(request, CancellationToken.None);
 
         await act.Should().ThrowAsync<EntityValidationException>()
-            .WithMessage($"Content should be at most {Message.MAX_LENGTH} characters long");
+            .WithMessage($"Content should be at most {DomainEntity.Message.MAX_LENGTH} characters long");
 
         conversationRepositoryMock.Verify(
             x => x.Get(
@@ -208,7 +207,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         );
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.IsAny<Message>(),
+                It.IsAny<DomainEntity.Message>(),
                 It.IsAny<CancellationToken>()
             ),
             Times.Never
@@ -227,7 +226,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         for (int testIndex = 0; testIndex < numberOfTests; testIndex++)
         {
             var extra = (testIndex == 0) ? 1 : rnd.Next(1, 128);
-            var len = Message.MAX_LENGTH + extra;
+            var len = DomainEntity.Message.MAX_LENGTH + extra;
             yield return new object[] { fixture.GetLongContent(len) };
         }
     }
@@ -251,11 +250,11 @@ public class SendMessageTest(SendMessageTestFixture fixture)
             It.Is<Guid>(id => id == request.ConversationId),
             It.IsAny<CancellationToken>()
         )).ReturnsAsync(exampleConversation);
-        Message? capturedMessage = null;
+        DomainEntity.Message? capturedMessage = null;
         messageRepositoryMock.Setup(x => x.Insert(
-            It.IsAny<Message>(),
+            It.IsAny<DomainEntity.Message>(),
             It.IsAny<CancellationToken>()
-        )).Callback<Message, CancellationToken>((m, ct) => capturedMessage = m)
+        )).Callback<DomainEntity.Message, CancellationToken>((m, ct) => capturedMessage = m)
           .Returns(Task.CompletedTask);
         var useCase = new UseCase.SendMessage(
             conversationRepositoryMock.Object,
@@ -274,7 +273,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
 
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.IsAny<Message>(),
+                It.IsAny<DomainEntity.Message>(),
                 It.IsAny<CancellationToken>()
             ),
             Times.Once
@@ -335,7 +334,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         );
         messageRepositoryMock.Verify(
             x => x.Insert(
-                It.Is<Message>(m => m.Id == response.MessageId),
+                It.Is<DomainEntity.Message>(m => m.Id == response.MessageId),
                 It.IsAny<CancellationToken>()
             ),
             Times.Once

@@ -1,10 +1,11 @@
 ﻿using Helix.Chat.Application.UseCases.Conversation.CreateConversation;
 using Helix.Chat.Domain.Interfaces;
+using Helix.Chat.UnitTests.Application.Conversation.Common;
 using Helix.Chat.UnitTests.Extensions.DateTime;
 using UseCase = Helix.Chat.Application.UseCases.Conversation.CreateConversation;
 
 namespace Helix.Chat.UnitTests.Application.Conversation.CreateConversation;
-public class CreateConversationTest : BaseFixture
+public class CreateConversationTest : ConversationUseCasesBaseFixture
 {
     [Fact(DisplayName = nameof(CreateConversation))]
     [Trait("Chat/Application", "CreateConversation - UseCase")]
