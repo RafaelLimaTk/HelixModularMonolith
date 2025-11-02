@@ -1,5 +1,5 @@
 ﻿using Helix.Chat.Domain.Enums;
-using Helix.Chat.Domain.Events.Conversation;
+using Helix.Chat.Domain.Events.Message;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
 

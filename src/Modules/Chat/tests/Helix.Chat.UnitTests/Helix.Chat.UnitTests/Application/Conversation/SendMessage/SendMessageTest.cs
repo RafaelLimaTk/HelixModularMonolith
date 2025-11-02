@@ -1,6 +1,5 @@
 ﻿using Helix.Chat.Application.UseCases.Conversation.SendMessage;
 using Helix.Chat.Domain.Enums;
-using Helix.Chat.Domain.Events.Conversation;
 using Helix.Chat.UnitTests.Extensions.DateTime;
 using UseCase = Helix.Chat.Application.UseCases.Conversation.SendMessage;
 

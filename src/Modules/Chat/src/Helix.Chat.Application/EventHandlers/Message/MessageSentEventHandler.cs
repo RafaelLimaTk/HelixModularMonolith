@@ -1,8 +1,8 @@
-﻿using Helix.Chat.Domain.Events.Conversation;
+﻿using Helix.Chat.Domain.Events.Message;
 using Shared.Domain.SeedWorks;
 
-namespace Helix.Chat.Application.EventHandlers;
-public class MessageSentEventHandler : IDomainEventHandler<MessageSent>
+namespace Helix.Chat.Application.EventHandlers.Message;
+public sealed class MessageSentEventHandler : IDomainEventHandler<MessageSent>
 {
     private readonly IMessageProducer _bus;
     public MessageSentEventHandler(IMessageProducer bus) => _bus = bus;

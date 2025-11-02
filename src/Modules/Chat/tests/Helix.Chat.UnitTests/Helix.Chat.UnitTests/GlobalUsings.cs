@@ -1,5 +1,6 @@
 ﻿global using Bogus;
 global using FluentAssertions;
+global using Helix.Chat.Domain.Events.Message;
 global using Helix.Chat.UnitTests.Common;
 global using Moq;
 global using Shared.Application.Exceptions;

@@ -1,6 +1,6 @@
 ﻿using Shared.Domain.SeedWorks;
 
-namespace Helix.Chat.Domain.Events.Conversation;
+namespace Helix.Chat.Domain.Events.Message;
 public sealed class MessageSent : DomainEvent
 {
     public Guid MessageId { get; }

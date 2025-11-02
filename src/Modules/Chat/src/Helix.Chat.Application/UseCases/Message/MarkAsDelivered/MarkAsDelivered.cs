@@ -1,4 +1,4 @@
-﻿using Helix.Chat.Domain.Events.Conversation;
+﻿using Helix.Chat.Domain.Events.Message;
 
 namespace Helix.Chat.Application.UseCases.Message.MarkAsDelivered;
 public sealed class MarkAsDelivered : IMarkAsDelivered

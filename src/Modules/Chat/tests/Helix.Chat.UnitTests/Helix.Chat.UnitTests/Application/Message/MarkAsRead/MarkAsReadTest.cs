@@ -1,6 +1,6 @@
 ﻿using Helix.Chat.Application.UseCases.Message.MarkAsRead;
 using Helix.Chat.Domain.Enums;
-using Helix.Chat.Domain.Events.Conversation;
+using Helix.Chat.Domain.Events.Message;
 using UseCase = Helix.Chat.Application.UseCases.Message.MarkAsRead;
 
 namespace Helix.Chat.UnitTests.Application.Message.MarkAsRead;

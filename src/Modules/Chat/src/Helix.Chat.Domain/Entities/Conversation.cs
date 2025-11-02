@@ -1,4 +1,4 @@
-﻿using Helix.Chat.Domain.Events.Conversation;
+﻿using Helix.Chat.Domain.Events.Message;
 using Helix.Chat.Domain.ValueObjects;
 using Shared.Domain.Exceptions;
 using Shared.Domain.SeedWorks;

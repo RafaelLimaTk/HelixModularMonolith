@@ -1,4 +1,4 @@
-﻿using Helix.Chat.Domain.Events.Conversation;
+﻿using Helix.Chat.Domain.Events.Message;
 using Shared.Domain.Exceptions;
 
 namespace Helix.Chat.Application.UseCases.Message.MarkAsRead;

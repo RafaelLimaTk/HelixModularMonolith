@@ -1,25 +1,24 @@
 ﻿using Helix.Chat.Application.EventHandlers.Message;
 
 namespace Helix.Chat.UnitTests.Application.EventHandlers;
-public class MessageSentEventHandlerTest
+public class MessageReadEventHandlerTest
 {
     [Fact(DisplayName = nameof(HandleAsync))]
-    [Trait("Chat/Application", "MessageSent - EventHandlers")]
+    [Trait("Chat/Application", "MessageRead - EventHandlers")]
     public async Task HandleAsync()
     {
         var messageProducerMock = new Mock<IMessageProducer>();
         messageProducerMock
             .Setup(x => x.SendMessageAsync(
-                It.IsAny<MessageSent>(),
+                It.IsAny<MessageRead>(),
                 It.IsAny<CancellationToken>()
              ))
             .Returns(Task.CompletedTask);
-        var handler = new MessageSentEventHandler(messageProducerMock.Object);
-        MessageSent @event = new(
+        var handler = new MessageReadEventHandler(messageProducerMock.Object);
+        MessageRead @event = new(
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            "Hello, world!",
             DateTime.UtcNow
         );
 
