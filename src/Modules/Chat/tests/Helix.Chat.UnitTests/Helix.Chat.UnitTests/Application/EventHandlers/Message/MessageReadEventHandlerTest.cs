@@ -1,6 +1,6 @@
 ﻿using Helix.Chat.Application.EventHandlers.Message;
 
-namespace Helix.Chat.UnitTests.Application.EventHandlers;
+namespace Helix.Chat.UnitTests.Application.EventHandlers.Message;
 public class MessageReadEventHandlerTest
 {
     [Fact(DisplayName = nameof(HandleAsync))]

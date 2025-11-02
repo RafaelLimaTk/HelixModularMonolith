@@ -1,5 +1,5 @@
 ﻿using Helix.Chat.Domain.Enums;
-using Helix.Chat.Domain.Events.Message;
+using Helix.Chat.Domain.Events.Conversation;
 
 namespace Helix.Chat.UnitTests.Domain.Entities.Conversation;
 
@@ -20,6 +20,11 @@ public class ConversationTest(ConversationTestFixture fixture)
         aggregate.Title.Should().Be(validTitle);
         aggregate.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
         aggregate.Participants.Should().BeEmpty();
+        aggregate.Events.OfType<ConversationCreated>().Should().HaveCount(1);
+        var evt = aggregate.Events.OfType<ConversationCreated>().First();
+        evt.ConversationId.Should().Be(aggregate.Id);
+        evt.Title.Should().Be(aggregate.Title);
+        evt.CreatedAt.Should().BeCloseTo(aggregate.CreatedAt, TimeSpan.FromSeconds(2));
     }
 
     [Fact(DisplayName = nameof(InstantiateThrowWhenNameEmpty))]
@@ -70,6 +75,11 @@ public class ConversationTest(ConversationTestFixture fixture)
         conv.Title.Should().Be(title);
         conv.Id.Should().NotBe(Guid.Empty);
         conv.Participants.Should().BeEmpty();
+        conv.Events.OfType<ConversationCreated>().Should().HaveCount(1);
+        var evt = conv.Events.OfType<ConversationCreated>().First();
+        evt.ConversationId.Should().Be(conv.Id);
+        evt.Title.Should().Be(title);
+        evt.CreatedAt.Should().BeCloseTo(conv.CreatedAt, TimeSpan.FromSeconds(2));
     }
 
     [Theory(DisplayName = nameof(InstantiateErrorWhenTitleIsLessThan128Characters))]
@@ -110,6 +120,12 @@ public class ConversationTest(ConversationTestFixture fixture)
         result.Should().BeTrue();
         aggregate.Participants.Should().HaveCount(1);
         aggregate.Participants.First().UserId.Should().Be(validUserId);
+
+        aggregate.Events.OfType<ParticipantAdded>().Should().HaveCount(1);
+        var evt = aggregate.Events.OfType<ParticipantAdded>().First();
+        evt.ConversationId.Should().Be(aggregate.Id);
+        evt.UserId.Should().Be(validUserId);
+        evt.JoinedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
     }
 
     [Fact(DisplayName = nameof(AddParticipantWhenDuplicateUserReturnsFalseAndDoesNotDuplicate))]
@@ -124,6 +140,7 @@ public class ConversationTest(ConversationTestFixture fixture)
 
         resultDuplicate.Should().BeFalse();
         aggregate.Participants.Should().HaveCount(1);
+        aggregate.Events.OfType<ParticipantAdded>().Should().HaveCount(1);
     }
 
     [Fact(DisplayName = nameof(AddParticipantThrowWhenUserIdIsEmpty))]
@@ -136,7 +153,7 @@ public class ConversationTest(ConversationTestFixture fixture)
         var act = () => aggregate.AddParticipant(emptyUserId);
 
         act.Should().Throw<EntityValidationException>()
-           .WithMessage("UserId should not be empty");
+            .WithMessage("UserId should not be empty");
     }
 
     [Fact(DisplayName = nameof(SendMessageCreatesMessageWithSentStatus))]
@@ -169,8 +186,8 @@ public class ConversationTest(ConversationTestFixture fixture)
 
         var _ = aggregate.SendMessage(senderId, content);
 
-        aggregate.Events.Should().HaveCount(1);
-        var evt = aggregate.Events.First().Should().BeOfType<MessageSent>().Subject;
+        aggregate.Events.OfType<MessageSent>().Should().HaveCount(1);
+        var evt = aggregate.Events.OfType<MessageSent>().First();
 
         evt.MessageId.Should().NotBe(Guid.Empty);
         evt.ConversationId.Should().Be(aggregate.Id);

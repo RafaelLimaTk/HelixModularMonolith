@@ -1,4 +1,5 @@
-﻿using Helix.Chat.Domain.Events.Message;
+﻿using Helix.Chat.Domain.Events.Conversation;
+using Helix.Chat.Domain.Events.Message;
 using Helix.Chat.Domain.ValueObjects;
 using Shared.Domain.Exceptions;
 using Shared.Domain.SeedWorks;
@@ -22,6 +23,7 @@ public sealed class Conversation : AggregateRoot
         Title = title.Trim();
         CreatedAt = DateTime.UtcNow;
         Validate();
+        RaiseEvent(new ConversationCreated(Id, Title, CreatedAt));
     }
 
     public bool AddParticipant(Guid userId)
@@ -30,7 +32,9 @@ public sealed class Conversation : AggregateRoot
             throw new EntityValidationException("UserId should not be empty");
 
         if (!_participantIds.Add(userId)) return false;
-        _participants.Add(new Participant(userId, DateTime.UtcNow));
+        var joinedAt = DateTime.UtcNow;
+        _participants.Add(new Participant(userId, joinedAt));
+        RaiseEvent(new ParticipantAdded(Id, userId, joinedAt));
         Validate();
         return true;
     }

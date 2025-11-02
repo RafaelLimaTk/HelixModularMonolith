@@ -317,8 +317,8 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         response.MessageId.Should().NotBeEmpty();
         response.SentAt.TrimMilliseconds().Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         exampleConversation.Events.Should().NotBeNull();
-        exampleConversation.Events.Should().HaveCount(1);
-        var @event = exampleConversation.Events.First().Should().BeOfType<MessageSent>().Subject;
+        exampleConversation.Events.OfType<MessageSent>().Should().HaveCount(1);
+        var @event = exampleConversation.Events.OfType<MessageSent>().First();
         @event.MessageId.Should().Be(response.MessageId);
         @event.ConversationId.Should().Be(exampleConversation.Id);
         @event.SenderId.Should().Be(sender);

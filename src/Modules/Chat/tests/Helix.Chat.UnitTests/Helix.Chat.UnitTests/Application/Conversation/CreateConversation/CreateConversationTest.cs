@@ -1,4 +1,5 @@
 ﻿using Helix.Chat.Application.UseCases.Conversation.CreateConversation;
+using Helix.Chat.Domain.Events.Conversation;
 using Helix.Chat.Domain.Interfaces;
 using Helix.Chat.UnitTests.Application.Conversation.Common;
 using Helix.Chat.UnitTests.Extensions.DateTime;
@@ -37,6 +38,45 @@ public class CreateConversationTest : ConversationUseCasesBaseFixture
                 && c.CreatedAt.TrimMilliseconds() >= before
                 && c.CreatedAt.TrimMilliseconds() <= after
             ),
+            It.IsAny<CancellationToken>()
+        ), Times.Once);
+        unitOfWork.Verify(u => u.Commit(
+            It.IsAny<CancellationToken>()
+        ), Times.Once);
+    }
+
+    [Fact(DisplayName = nameof(CreateConversationRaiseConversationCreatedDomainEvent))]
+    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    public async Task CreateConversationRaiseConversationCreatedDomainEvent()
+    {
+        var title = Faker.Lorem.Sentence();
+        var repository = new Mock<IConversationRepository>();
+        var unitOfWork = new Mock<IUnitOfWork>();
+
+        DomainEntity.Conversation? captured = null;
+        repository.Setup(r => r.Insert(
+            It.IsAny<DomainEntity.Conversation>(),
+            It.IsAny<CancellationToken>()
+        ))
+        .Callback<DomainEntity.Conversation, CancellationToken>((c, ct) => captured = c)
+        .Returns(Task.CompletedTask);
+
+        var useCase = new UseCase.CreateConversation(repository.Object, unitOfWork.Object);
+        var input = new CreateConversationInput(title);
+
+        var before = DateTime.UtcNow.TrimMilliseconds();
+        var output = await useCase.Handle(input, CancellationToken.None);
+        var after = DateTime.UtcNow.TrimMilliseconds();
+
+        captured.Should().NotBeNull();
+        captured!.Events.OfType<ConversationCreated>().Should().HaveCount(1);
+        var evt = captured.Events.OfType<ConversationCreated>().First();
+        evt.ConversationId.Should().Be(captured.Id);
+        evt.Title.Should().Be(title);
+        evt.CreatedAt.TrimMilliseconds().Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+
+        repository.Verify(r => r.Insert(
+            It.IsAny<DomainEntity.Conversation>(),
             It.IsAny<CancellationToken>()
         ), Times.Once);
         unitOfWork.Verify(u => u.Commit(
