@@ -1,5 +1,4 @@
 ﻿using MongoDB.Driver;
-using Shared.Query.Infrastructure;
 using Shared.Query.Interfaces;
 using System.Linq.Expressions;
 
@@ -9,17 +8,14 @@ public sealed class MongoSynchronizeDb(IReadDbContext ctx) : ISynchronizeDb
     private readonly IReadDbContext _ctx = ctx;
     private bool _disposed;
 
-    public Task UpsertAsync<TQueryModel>(
-        TQueryModel queryModel,
-        Expression<Func<TQueryModel, bool>> upsertFilter,
-        CancellationToken cancellationToken)
+    public Task UpdateAsync<TQueryModel>(
+        FilterDefinition<TQueryModel> filter,
+        UpdateDefinition<TQueryModel> update,
+        CancellationToken cancellationToken,
+        bool upsert = false)
         where TQueryModel : IQueryModel
-    {
-        var col = _ctx.GetCollection<TQueryModel>();
-        var update = UpdatePatchBuilder.Build(queryModel);
-        return col.UpdateOneAsync(upsertFilter, update,
-            new UpdateOptions { IsUpsert = true }, cancellationToken);
-    }
+        => _ctx.GetCollection<TQueryModel>()
+               .UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = upsert }, cancellationToken);
 
     public Task DeleteAsync<TQueryModel>(
         Expression<Func<TQueryModel, bool>> deleteFilter,

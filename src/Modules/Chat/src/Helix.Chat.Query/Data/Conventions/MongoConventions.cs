@@ -7,29 +7,22 @@ using Shared.Query.Extensions;
 namespace Helix.Chat.Query.Data.Conventions;
 public static class MongoConventions
 {
-    static bool _applied;
+    private static int _initialized;
     public static void Apply()
     {
-        if (_applied) return;
+        if (Interlocked.CompareExchange(ref _initialized, 1, 0) != 0) return;
+
+        BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(GuidRepresentation.Standard));
+
+        var objectDisc = BsonSerializer.LookupDiscriminatorConvention(typeof(object));
+        BsonSerializer.RegisterSerializer(new ObjectSerializer(objectDisc, GuidRepresentation.Standard));
+
         var pack = new ConventionPack {
             new IgnoreExtraElementsConvention(true),
             new EnumRepresentationConvention(BsonType.String),
-            new GuidStandardConvention(),
             new SnakeCaseElementNameConvention()
         };
         ConventionRegistry.Register("chat_conventions", pack, _ => true);
-        _applied = true;
-    }
-}
-
-internal sealed class GuidStandardConvention : IMemberMapConvention
-{
-    public string Name => "GuidStandard";
-    public void Apply(BsonMemberMap m)
-    {
-        var t = Nullable.GetUnderlyingType(m.MemberType) ?? m.MemberType;
-        if (t == typeof(Guid))
-            m.SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
     }
 }
 

@@ -7,6 +7,12 @@ public class QueryFixtureCollection
 
 public class QueryBaseFixture : BaseFixture
 {
-    public Guid NewId() => Guid.NewGuid();
-    public string AnyContent() => Faker.Lorem.Sentence();
+    static QueryBaseFixture()
+        => BsonMappingTestHelper.EnsureMappingsRegistered();
+
+    public Guid NewId()
+        => Guid.NewGuid();
+
+    public string AnyContent()
+        => Faker.Lorem.Sentence();
 }

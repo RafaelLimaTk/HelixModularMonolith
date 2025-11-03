@@ -2,7 +2,6 @@
 using Helix.Chat.Query.Projections.Message;
 using Helix.Chat.UnitTests.Query.Common;
 using Helix.Chat.UnitTests.Query.Projection.Common;
-using System.Linq.Expressions;
 
 namespace Helix.Chat.UnitTests.Query.Projection.Message;
 
@@ -11,35 +10,88 @@ public sealed class MessageDeliveredProjectionTest(QueryBaseFixture fixture) : P
 {
     private readonly QueryBaseFixture _fixture = fixture;
 
-    [Fact(DisplayName = nameof(ProjectCallsUpsertWithCorrectModelAndFilter))]
+    [Fact(DisplayName = nameof(ProjectCallsUpdateWithCorrectFilterAndUpdate))]
     [Trait("Chat/Query", "MessageDelivered - Projection")]
-    public async Task ProjectCallsUpsertWithCorrectModelAndFilter()
+    public async Task ProjectCallsUpdateWithCorrectFilterAndUpdate()
     {
-        var (syncMock, cap) = CaptureUpsert<MessageQueryModel>();
-        var projection = new MessageDeliveredProjection(syncMock.Object);
+        var (synchronizeDbMock, updateCaptor) = CaptureUpdate<MessageQueryModel>();
+        var projection = new MessageDeliveredProjection(synchronizeDbMock.Object);
 
-        var before = DateTime.UtcNow;
-        var @event = new MessageDelivered(
+        var messageDelivered = new MessageDelivered(
             messageId: _fixture.NewId(),
             conversationId: _fixture.NewId(),
             deliveredAt: DateTime.UtcNow);
-        var after = DateTime.UtcNow;
 
-        await projection.ProjectAsync(@event, CancellationToken.None);
+        await projection.ProjectAsync(messageDelivered, CancellationToken.None);
 
-        syncMock.Verify(s => s.UpsertAsync(
-            It.IsAny<MessageQueryModel>(),
-            It.IsAny<Expression<Func<MessageQueryModel, bool>>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        updateCaptor.Calls.Should().Be(1);
+        updateCaptor.Upsert.Should().BeFalse();
 
-        cap.Model.Should().NotBeNull();
-        cap.Model!.Id.Should().Be(@event.MessageId);
-        cap.Model.Status.Should().Be("Delivered");
-        cap.Model.DeliveredAt.Should().BeAfter(before).And.BeBefore(after.AddSeconds(1));
+        var (filterDoc, updateDoc) = Render(updateCaptor);
 
-        cap.Filter.Should().NotBeNull();
-        var predicate = cap.Filter!.Compile();
-        predicate(cap.Model).Should().BeTrue();
-        predicate(new MessageQueryModel { Id = Guid.NewGuid() }).Should().BeFalse();
+        var idFieldName = Field<MessageQueryModel>(x => x.Id);
+        var statusFieldName = Field<MessageQueryModel>(x => x.Status);
+        filterDoc.ToString().Should().Contain(idFieldName);
+        filterDoc.ToString().Should().Contain(statusFieldName);
+        filterDoc.ToString().Should().Contain("$ne");
+
+        var deliveredAtFieldName = Field<MessageQueryModel>(x => x.DeliveredAt!);
+
+        updateDoc.Contains("$set").Should().BeTrue();
+        updateDoc["$set"][statusFieldName].AsString.Should().Be("Delivered");
+
+        updateDoc.Contains("$max").Should().BeTrue();
+        updateDoc["$max"][deliveredAtFieldName].ToUniversalTime()
+            .Should().BeCloseTo(messageDelivered.DeliveredAt, TimeSpan.FromSeconds(1));
+
+        synchronizeDbMock.VerifyAll();
+    }
+
+    [Fact(DisplayName = nameof(UsesMaxAndDoesNotTouchImmutableFields))]
+    [Trait("Chat/Query", "MessageDelivered - Projection")]
+    public async Task UsesMaxAndDoesNotTouchImmutableFields()
+    {
+        var (synchronizeDbMock, updateCaptor) = CaptureUpdate<MessageQueryModel>();
+        var projection = new MessageDeliveredProjection(synchronizeDbMock.Object);
+        var messageDelivered = new MessageDelivered(
+            messageId: _fixture.NewId(),
+            conversationId: _fixture.NewId(),
+            deliveredAt: DateTime.UtcNow);
+
+        await projection.ProjectAsync(messageDelivered, CancellationToken.None);
+
+        updateCaptor.Upsert.Should().BeFalse();
+        var (_, updateDoc) = Render(updateCaptor);
+
+        var deliveredAtFieldName = Field<MessageQueryModel>(x => x.DeliveredAt!);
+        var conversationIdFieldName = Field<MessageQueryModel>(x => x.ConversationId);
+        var senderIdFieldName = Field<MessageQueryModel>(x => x.SenderId);
+        var contentFieldName = Field<MessageQueryModel>(x => x.Content);
+
+        updateDoc.Contains("$max").Should().BeTrue();
+        updateDoc["$max"].AsBsonDocument.Contains(deliveredAtFieldName).Should().BeTrue();
+
+        var set = updateDoc["$set"].AsBsonDocument;
+        set.Contains(conversationIdFieldName).Should().BeFalse();
+        set.Contains(senderIdFieldName).Should().BeFalse();
+        set.Contains(contentFieldName).Should().BeFalse();
+    }
+
+    [Fact(DisplayName = nameof(DoesNotRegressAfterRead))]
+    [Trait("Chat/Query", "MessageDelivered - Projection")]
+    public async Task DoesNotRegressAfterRead()
+    {
+        var (synchronizeDbMock, updateCaptor) = CaptureUpdate<MessageQueryModel>();
+        var projection = new MessageDeliveredProjection(synchronizeDbMock.Object);
+        var messageDelivered = new MessageDelivered(
+            messageId: _fixture.NewId(),
+            conversationId: _fixture.NewId(),
+            deliveredAt: DateTime.UtcNow);
+
+        await projection.ProjectAsync(messageDelivered, CancellationToken.None);
+
+        var (filterDoc, _) = Render(updateCaptor);
+        var statusFieldName = Field<MessageQueryModel>(x => x.Status);
+        filterDoc.ToString().Should().Contain(statusFieldName).And.Contain("$ne");
     }
 }

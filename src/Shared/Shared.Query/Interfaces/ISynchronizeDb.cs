@@ -1,16 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using MongoDB.Driver;
+using System.Linq.Expressions;
 
 namespace Shared.Query.Interfaces;
 public interface ISynchronizeDb : IDisposable
 {
-    /// Upserts a query model into the database.
-    Task UpsertAsync<TQueryModel>(
-        TQueryModel queryModel,
-        Expression<Func<TQueryModel, bool>> upsertFilter,
-        CancellationToken cancellationToken)
+    Task UpdateAsync<TQueryModel>(
+        FilterDefinition<TQueryModel> filter,
+        UpdateDefinition<TQueryModel> update,
+        CancellationToken cancellationToken,
+        bool upsert = false)
         where TQueryModel : IQueryModel;
 
-    /// Deletes query models that match the filter.
     Task DeleteAsync<TQueryModel>(
         Expression<Func<TQueryModel, bool>> deleteFilter,
         CancellationToken cancellationToken)
