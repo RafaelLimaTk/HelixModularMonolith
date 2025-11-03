@@ -1,0 +1,9 @@
+﻿global using Helix.Chat.Query.Data.Repositories.Interfaces;
+global using Helix.Chat.Query.Enums;
+global using Helix.Chat.Query.Models;
+global using MongoDB.Driver;
+global using Shared.Application.Projections;
+global using Shared.Query.Extensions;
+global using Shared.Query.Interfaces;
+global using Shared.Query.Interfaces.SearchableRepository;
+global using Shared.Query.Specifications.Interfaces;

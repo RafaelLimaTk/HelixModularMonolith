@@ -15,4 +15,7 @@ public class QueryBaseFixture : BaseFixture
 
     public string AnyContent()
         => Faker.Lorem.Sentence();
+
+    public string GetValidTitle()
+        => Faker.Lorem.Sentence(3).Trim();
 }

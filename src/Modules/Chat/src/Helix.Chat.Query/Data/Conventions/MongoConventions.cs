@@ -2,7 +2,6 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
-using Shared.Query.Extensions;
 
 namespace Helix.Chat.Query.Data.Conventions;
 public static class MongoConventions

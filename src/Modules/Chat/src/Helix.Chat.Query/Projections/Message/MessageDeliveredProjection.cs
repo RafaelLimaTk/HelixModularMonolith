@@ -1,9 +1,4 @@
 ﻿using Helix.Chat.Domain.Events.Message;
-using Helix.Chat.Query.Enums;
-using Helix.Chat.Query.Models;
-using MongoDB.Driver;
-using Shared.Application.Projections;
-using Shared.Query.Interfaces;
 
 namespace Helix.Chat.Query.Projections.Message;
 public sealed class MessageDeliveredProjection(ISynchronizeDb sync) : IProjectionHandler<MessageDelivered>

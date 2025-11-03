@@ -1,9 +1,6 @@
 ﻿using Helix.Chat.Query.Data.Conventions;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
-using MongoDB.Driver;
-using Shared.Query.Extensions;
-using Shared.Query.Interfaces;
 
 namespace Helix.Chat.Query.Data.Context;
 

@@ -1,6 +1,4 @@
-﻿using MongoDB.Driver;
-using Shared.Query.Interfaces;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace Helix.Chat.Query.Data.Context;
 public sealed class MongoSynchronizeDb(IReadDbContext ctx) : ISynchronizeDb

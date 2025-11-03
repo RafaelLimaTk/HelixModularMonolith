@@ -1,10 +1,5 @@
 ﻿using Helix.Chat.Query.Data.Context;
-using Helix.Chat.Query.Data.Repositories.Interfaces;
-using Helix.Chat.Query.Models;
 using MongoDB.Bson;
-using MongoDB.Driver;
-using Shared.Query.Interfaces.SearchableRepository;
-using Shared.Query.Specifications.Interfaces;
 
 namespace Helix.Chat.Query.Data.Repositories;
 internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessagesReadRepository
