@@ -20,8 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Shared\Shared.Query\Shared.Query.csproj" />
     <ProjectReference Include="..\..\..\src\Helix.Chat.Application\Helix.Chat.Application.csproj" />
     <ProjectReference Include="..\..\..\src\Helix.Chat.Domain\Helix.Chat.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Helix.Chat.Query\Helix.Chat.Query.csproj" />
   </ItemGroup>
 
   <ItemGroup>

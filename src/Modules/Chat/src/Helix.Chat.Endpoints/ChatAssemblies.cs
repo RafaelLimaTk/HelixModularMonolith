@@ -7,5 +7,6 @@ public static class ChatAssemblies
     [
         Utils.AssemblyRef.Value,
         Application.Utils.AssemblyRef.Value,
+        Query.Utils.AssemblyRef.Value,
     ];
 }
