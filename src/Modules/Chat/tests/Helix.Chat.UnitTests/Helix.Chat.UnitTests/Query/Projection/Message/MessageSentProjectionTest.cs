@@ -1,5 +1,5 @@
 ﻿using Helix.Chat.Query.Models;
-using Helix.Chat.Query.Projections;
+using Helix.Chat.Query.Projections.Message;
 using Helix.Chat.UnitTests.Query.Common;
 using Helix.Chat.UnitTests.Query.Projection.Common;
 using System.Linq.Expressions;

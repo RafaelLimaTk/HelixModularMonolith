@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Bson.Serialization.Serializers;
 using Shared.Query.Extensions;
 
 namespace Helix.Chat.Query.Data.Conventions;
@@ -13,6 +14,7 @@ public static class MongoConventions
         var pack = new ConventionPack {
             new IgnoreExtraElementsConvention(true),
             new EnumRepresentationConvention(BsonType.String),
+            new GuidStandardConvention(),
             new SnakeCaseElementNameConvention()
         };
         ConventionRegistry.Register("chat_conventions", pack, _ => true);
@@ -20,7 +22,18 @@ public static class MongoConventions
     }
 }
 
-sealed class SnakeCaseElementNameConvention : IMemberMapConvention
+internal sealed class GuidStandardConvention : IMemberMapConvention
+{
+    public string Name => "GuidStandard";
+    public void Apply(BsonMemberMap m)
+    {
+        var t = Nullable.GetUnderlyingType(m.MemberType) ?? m.MemberType;
+        if (t == typeof(Guid))
+            m.SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
+    }
+}
+
+internal sealed class SnakeCaseElementNameConvention : IMemberMapConvention
 {
     public string Name => "SnakeCase";
     public void Apply(BsonMemberMap m)

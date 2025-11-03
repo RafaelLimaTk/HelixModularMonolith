@@ -3,7 +3,7 @@ using Helix.Chat.Query.Models;
 using Shared.Application.Projections;
 using Shared.Query.Interfaces;
 
-namespace Helix.Chat.Query.Projections;
+namespace Helix.Chat.Query.Projections.Message;
 
 public sealed class MessageReadProjection(ISynchronizeDb sync) : IProjectionHandler<MessageRead>
 {

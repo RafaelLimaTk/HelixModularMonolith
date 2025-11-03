@@ -1,6 +1,7 @@
 ﻿using Helix.Chat.Query.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Shared.Query.Interfaces;
 
@@ -18,7 +19,8 @@ public sealed class ConversationConfiguration : IReadDbConfiguration
         {
             cm.AutoMap();
             cm.SetIgnoreExtraElements(true);
-            cm.MapIdMember(x => x.Id);
+            cm.MapIdMember(x => x.Id)
+              .SetSerializer(new GuidSerializer(GuidRepresentation.Standard));
         });
     }
 
