@@ -1,8 +1,5 @@
-﻿using Helix.Chat.Query.Models;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
-using Shared.Query.Interfaces;
 
 namespace Helix.Chat.Query.Data.Configurations;
 public sealed class ConversationConfiguration : IReadDbConfiguration
