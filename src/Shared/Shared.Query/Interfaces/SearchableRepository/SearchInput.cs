@@ -1,5 +1,5 @@
 ﻿namespace Shared.Query.Interfaces.SearchableRepository;
-public class SearchRequest
+public class SearchInput
 {
     public int Page { get; set; }
     public int PerPage { get; set; }
@@ -7,7 +7,7 @@ public class SearchRequest
     public string OrderBy { get; set; }
     public SearchOrder Order { get; set; }
 
-    public SearchRequest(
+    public SearchInput(
         int page,
         int perPage,
         string search,

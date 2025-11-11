@@ -10,8 +10,8 @@ internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMess
     public async Task<MessageQueryModel?> Get(Guid id, CancellationToken ct)
         => await _col.Find(x => x.Id == id).FirstOrDefaultAsync(ct);
 
-    public async Task<SearchResponse<MessageQueryModel>> Search(
-        SearchRequest request, CancellationToken ct)
+    public async Task<SearchOutput<MessageQueryModel>> Search(
+        SearchInput request, CancellationToken ct)
     {
         var (page, perPage) = Normalize(request.Page, request.PerPage);
 
@@ -25,10 +25,10 @@ internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMess
             .Limit(perPage)
             .ToListAsync(ct);
 
-        return new SearchResponse<MessageQueryModel>(page, perPage, (int)total, items);
+        return new SearchOutput<MessageQueryModel>(page, perPage, (int)total, items);
     }
 
-    public async Task<SearchResponse<MessageQueryModel>> Search(
+    public async Task<SearchOutput<MessageQueryModel>> Search(
         IQuerySpecification<MessageQueryModel> spec, CancellationToken ct)
     {
         var filter = spec.Criteria is null
@@ -54,7 +54,7 @@ internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMess
             .Limit(perPage)
             .ToListAsync(ct);
 
-        return new SearchResponse<MessageQueryModel>(page, perPage, (int)total, items);
+        return new SearchOutput<MessageQueryModel>(page, perPage, (int)total, items);
     }
 
     private static (int page, int perPage) Normalize(int page, int perPage)

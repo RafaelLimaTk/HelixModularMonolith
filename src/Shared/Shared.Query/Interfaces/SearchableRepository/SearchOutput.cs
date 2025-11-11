@@ -1,11 +1,11 @@
 ﻿namespace Shared.Query.Interfaces.SearchableRepository;
-public class SearchResponse<TModel>
+public class SearchOutput<TModel>
 {
     public int CurrentPage { get; set; }
     public int PerPage { get; set; }
     public int Total { get; set; }
     public IReadOnlyList<TModel> Items { get; set; }
-    public SearchResponse(
+    public SearchOutput(
         int currentPage,
         int perPage,
         int total,

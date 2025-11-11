@@ -12,8 +12,8 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
     public async Task<ConversationQueryModel?> Get(Guid id, CancellationToken ct)
         => await _col.Find(x => x.Id == id).FirstOrDefaultAsync(ct);
 
-    public async Task<SearchResponse<ConversationQueryModel>> Search(
-        SearchRequest request, CancellationToken ct)
+    public async Task<SearchOutput<ConversationQueryModel>> Search(
+        SearchInput request, CancellationToken ct)
     {
         var (page, perPage) = Normalize(request.Page, request.PerPage);
         var filter = BuildFilter(request.Search);
@@ -24,10 +24,10 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
             .Sort(sort).Skip((page - 1) * perPage).Limit(perPage)
             .ToListAsync(ct);
 
-        return new SearchResponse<ConversationQueryModel>(page, perPage, (int)total, items);
+        return new SearchOutput<ConversationQueryModel>(page, perPage, (int)total, items);
     }
 
-    public async Task<SearchResponse<ConversationQueryModel>> Search(
+    public async Task<SearchOutput<ConversationQueryModel>> Search(
         IQuerySpecification<ConversationQueryModel> spec, CancellationToken ct)
     {
         var filter = spec.Criteria is null
@@ -51,7 +51,7 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
             .Sort(sort).Skip((page - 1) * perPage).Limit(perPage)
             .ToListAsync(ct);
 
-        return new SearchResponse<ConversationQueryModel>(page, perPage, (int)total, items);
+        return new SearchOutput<ConversationQueryModel>(page, perPage, (int)total, items);
     }
 
     private static (int page, int perPage) Normalize(int page, int perPage)
