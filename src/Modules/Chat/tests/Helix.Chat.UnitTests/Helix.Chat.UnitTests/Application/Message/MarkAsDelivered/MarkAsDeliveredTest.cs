@@ -13,7 +13,7 @@ public class MarkAsDeliveredTest
         => _fixture = fixture;
 
     [Fact(DisplayName = nameof(MarkAsDeliveredPersistsAndReturnsChangedTrue))]
-    [Trait("Chat/Application", "MarkAsDelivered - UseCase")]
+    [Trait("Chat/Application", "MarkAsDelivered - Use Cases")]
     public async Task MarkAsDeliveredPersistsAndReturnsChangedTrue()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -76,7 +76,7 @@ public class MarkAsDeliveredTest
     }
 
     [Fact(DisplayName = nameof(ThrowWhenMessageNotFound))]
-    [Trait("Chat/Application", "MarkAsDelivered - UseCase")]
+    [Trait("Chat/Application", "MarkAsDelivered - Use Cases")]
     public async Task ThrowWhenMessageNotFound()
     {
         var exampleMessageId = Guid.NewGuid();
@@ -104,7 +104,7 @@ public class MarkAsDeliveredTest
     }
 
     [Fact(DisplayName = nameof(ThrowWhenConversationNotFound))]
-    [Trait("Chat/Application", "MarkAsDelivered - UseCase")]
+    [Trait("Chat/Application", "MarkAsDelivered - Use Cases")]
     public async Task ThrowWhenConversationNotFound()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -139,7 +139,7 @@ public class MarkAsDeliveredTest
     }
 
     [Fact(DisplayName = nameof(DoesNotChangeStatusWhenAlreadyDelivered))]
-    [Trait("Chat/Application", "MarkAsDelivered - UseCase")]
+    [Trait("Chat/Application", "MarkAsDelivered - Use Cases")]
     public async Task DoesNotChangeStatusWhenAlreadyDelivered()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();

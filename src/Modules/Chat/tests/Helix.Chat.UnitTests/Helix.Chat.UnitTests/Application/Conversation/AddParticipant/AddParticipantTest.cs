@@ -9,7 +9,7 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
     private readonly AddParticipantTestFixture _fixture = fixture;
 
     [Fact(DisplayName = nameof(AddParticipant))]
-    [Trait("Chat/Application", "AddParticipant - UseCase")]
+    [Trait("Chat/Application", "AddParticipant - Use Cases")]
     public async Task AddParticipant()
     {
         var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
@@ -57,7 +57,7 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(AddParticipantRaiseParticipantAddedDomainEvent))]
-    [Trait("Chat/Application", "AddParticipant - UseCase")]
+    [Trait("Chat/Application", "AddParticipant - Use Cases")]
     public async Task AddParticipantRaiseParticipantAddedDomainEvent()
     {
         var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
@@ -113,7 +113,7 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowIfNotFoundConversation))]
-    [Trait("Chat/Application", "AddParticipant - UseCase")]
+    [Trait("Chat/Application", "AddParticipant - Use Cases")]
     public async Task ThrowIfNotFoundConversation()
     {
         var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
@@ -152,7 +152,7 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(DoNotAddWhenParticipantAlreadyExists))]
-    [Trait("Chat/Application", "AddParticipant - UseCase")]
+    [Trait("Chat/Application", "AddParticipant - Use Cases")]
     public async Task DoNotAddWhenParticipantAlreadyExists()
     {
         var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();
@@ -199,7 +199,7 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowWhenUserIdIsEmpty))]
-    [Trait("Chat/Application", "AddParticipant - UseCase")]
+    [Trait("Chat/Application", "AddParticipant - Use Cases")]
     public async Task ThrowWhenUserIdIsEmpty()
     {
         var conversationRepositoryMock = _fixture.GetConversationRepositoryMock();

@@ -1,6 +1,5 @@
 ﻿using Helix.Chat.Application.UseCases.Message.MarkAsRead;
 using Helix.Chat.Domain.Enums;
-using Helix.Chat.Domain.Events.Message;
 using UseCase = Helix.Chat.Application.UseCases.Message.MarkAsRead;
 
 namespace Helix.Chat.UnitTests.Application.Message.MarkAsRead;
@@ -11,7 +10,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     private readonly MarkAsReadTestFixture _fixture = fixture;
 
     [Fact(DisplayName = nameof(MarkAsReadPersistsAndRaisesEvent))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task MarkAsReadPersistsAndRaisesEvent()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -78,7 +77,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowWhenMessageNotFound))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task ThrowWhenMessageNotFound()
     {
         var exampleMessageId = Guid.NewGuid();
@@ -108,7 +107,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowWhenConversationNotFound))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task ThrowWhenConversationNotFound()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -146,7 +145,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowWhenReaderIsNotParticipant))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task ThrowWhenReaderIsNotParticipant()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -184,7 +183,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(ThrowWhenMarkAsReadFromSentState))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task ThrowWhenMarkAsReadFromSentState()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();
@@ -221,7 +220,7 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
     }
 
     [Fact(DisplayName = nameof(DoesNotChangeStatusWhenAlreadyRead))]
-    [Trait("Chat/Application", "MarkAsRead - UseCase")]
+    [Trait("Chat/Application", "MarkAsRead - Use Cases")]
     public async Task DoesNotChangeStatusWhenAlreadyRead()
     {
         var messageRepositoryMock = _fixture.GetMessageRepositoryMock();

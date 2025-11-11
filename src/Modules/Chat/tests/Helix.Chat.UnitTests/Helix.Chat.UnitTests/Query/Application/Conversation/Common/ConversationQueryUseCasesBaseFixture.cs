@@ -10,11 +10,11 @@ public class ConversationQueryUseCasesBaseFixture : QueryBaseFixture
     public Mock<IConversationsReadRepository> GetConversationReadRepositoryMock()
         => new();
 
-    public ConversationQueryModel CreateConversationQueryModel(Guid userId)
+    public ConversationQueryModel CreateConversationQueryModel(Guid userId, string? title = null)
         => new()
         {
             Id = NewId(),
-            Title = GetValidTitle(),
+            Title = title ?? GetValidTitle(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             ParticipantIds = [userId, NewId()],

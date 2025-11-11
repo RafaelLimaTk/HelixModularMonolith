@@ -9,7 +9,7 @@ namespace Helix.Chat.UnitTests.Application.Conversation.CreateConversation;
 public class CreateConversationTest : ConversationUseCasesBaseFixture
 {
     [Fact(DisplayName = nameof(CreateConversation))]
-    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [Trait("Chat/Application", "CreateConversation - Use Cases")]
     public async Task CreateConversation()
     {
         var title = Faker.Lorem.Sentence();
@@ -46,7 +46,7 @@ public class CreateConversationTest : ConversationUseCasesBaseFixture
     }
 
     [Fact(DisplayName = nameof(CreateConversationRaiseConversationCreatedDomainEvent))]
-    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [Trait("Chat/Application", "CreateConversation - Use Cases")]
     public async Task CreateConversationRaiseConversationCreatedDomainEvent()
     {
         var title = Faker.Lorem.Sentence();
@@ -85,7 +85,7 @@ public class CreateConversationTest : ConversationUseCasesBaseFixture
     }
 
     [Fact(DisplayName = nameof(ThrowWhenTitleIsEmpty))]
-    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [Trait("Chat/Application", "CreateConversation - Use Cases")]
     public async Task ThrowWhenTitleIsEmpty()
     {
         var repository = new Mock<IConversationRepository>();
@@ -108,7 +108,7 @@ public class CreateConversationTest : ConversationUseCasesBaseFixture
     }
 
     [Theory(DisplayName = nameof(ThrowWhenTitleIsLessThan3Characters))]
-    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [Trait("Chat/Application", "CreateConversation - Use Cases")]
     [InlineData("a")]
     [InlineData("ab")]
     public async Task ThrowWhenTitleIsLessThan3Characters(string title)
@@ -133,7 +133,7 @@ public class CreateConversationTest : ConversationUseCasesBaseFixture
     }
 
     [Theory(DisplayName = nameof(ThrowWhenTitleIsGreaterThanMaxCharacters))]
-    [Trait("Chat/Application", "CreateConversation - UseCase")]
+    [Trait("Chat/Application", "CreateConversation - Use Cases")]
     [InlineData(1)]
     [InlineData(10)]
     public async Task ThrowWhenTitleIsGreaterThanMaxCharacters(int excess)
