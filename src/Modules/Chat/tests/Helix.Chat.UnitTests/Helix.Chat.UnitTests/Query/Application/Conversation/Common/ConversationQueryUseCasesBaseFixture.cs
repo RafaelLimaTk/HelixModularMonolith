@@ -1,6 +1,5 @@
 ﻿using Helix.Chat.Query.Data.Repositories.Interfaces;
 using Helix.Chat.Query.Enums;
-using Helix.Chat.Query.Models;
 using Helix.Chat.UnitTests.Query.Common;
 
 namespace Helix.Chat.UnitTests.Query.Application.Conversation.Common;
@@ -8,6 +7,9 @@ namespace Helix.Chat.UnitTests.Query.Application.Conversation.Common;
 public class ConversationQueryUseCasesBaseFixture : QueryBaseFixture
 {
     public Mock<IConversationsReadRepository> GetConversationReadRepositoryMock()
+        => new();
+
+    public Mock<IMessagesReadRepository> GetMessagesReadRepositoryMock()
         => new();
 
     public ConversationQueryModel CreateConversationQueryModel(Guid userId, string? title = null)
@@ -29,5 +31,30 @@ public class ConversationQueryUseCasesBaseFixture : QueryBaseFixture
     public List<ConversationQueryModel> CreateExampleConversationsList(Guid userId, int count)
         => Enumerable.Range(0, count)
             .Select(_ => CreateConversationQueryModel(userId))
+            .ToList();
+
+    public MessageQueryModel CreateMessageQueryModel(
+        Guid conversationId,
+        Guid? senderId = null,
+        string? content = null,
+        DateTime? sentAt = null,
+        DateTime? deliveredAt = null,
+        DateTime? readAt = null,
+        string? status = null)
+        => new MessageQueryModel
+        {
+            Id = NewId(),
+            ConversationId = conversationId,
+            SenderId = senderId ?? NewId(),
+            Content = content ?? AnyContent(),
+            SentAt = sentAt ?? DateTime.UtcNow,
+            DeliveredAt = deliveredAt,
+            ReadAt = readAt,
+            Status = status ?? MessageStatus.Sent
+        };
+
+    public List<MessageQueryModel> CreateExampleMessagesList(Guid conversationId, int length = 5)
+        => Enumerable.Range(0, length)
+            .Select(_ => CreateMessageQueryModel(conversationId))
             .ToList();
 }

@@ -1,6 +1,4 @@
-﻿using Shared.Query.Interfaces;
-
-namespace Helix.Chat.Query.Models;
+﻿namespace Helix.Chat.Query.Models;
 public sealed class MessageQueryModel : IQueryModel
 {
     public Guid Id { get; init; }

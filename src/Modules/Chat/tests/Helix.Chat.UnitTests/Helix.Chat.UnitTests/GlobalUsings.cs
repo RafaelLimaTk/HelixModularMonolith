@@ -1,11 +1,14 @@
 ﻿global using Bogus;
 global using FluentAssertions;
 global using Helix.Chat.Domain.Events.Message;
+global using Helix.Chat.Query.Models;
 global using Helix.Chat.UnitTests.Common;
 global using Moq;
 global using Shared.Application.Exceptions;
 global using Shared.Application.Interfaces;
 global using Shared.Domain.Exceptions;
+global using Shared.Query.Interfaces.SearchableRepository;
+global using Shared.Query.Specifications.Interfaces;
 global using System.Text;
 global using DomainEntity = Helix.Chat.Domain.Entities;
 global using Event = Shared.Domain.SeedWorks;

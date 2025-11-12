@@ -1,8 +1,5 @@
 ﻿using Helix.Chat.Query.Application.UseCases.ListUserConversations;
-using Helix.Chat.Query.Models;
 using Helix.Chat.UnitTests.Query.Application.Conversation.Common;
-using Shared.Query.Interfaces.SearchableRepository;
-using Shared.Query.Specifications.Interfaces;
 using UseCase = Helix.Chat.Query.Application.UseCases.ListUserConversations;
 
 namespace Helix.Chat.UnitTests.Query.Application.Conversation.ListUserConversations;
@@ -126,7 +123,11 @@ public class ListUserConversationsTest : ConversationQueryUseCasesBaseFixture
         var userId = input.UserId;
         var repositoryMock = GetConversationReadRepositoryMock();
         var listConversations = CreateExampleConversationsList(userId, 5);
-        var expectedItems = listConversations.Where(c => c.ParticipantIds.Contains(userId)).ToList();
+        var expectedItems = listConversations
+            .Where(c => c.ParticipantIds.Contains(userId)
+                        && (string.IsNullOrWhiteSpace(input.Search)
+                            || c.Title.Contains(input.Search, StringComparison.InvariantCultureIgnoreCase)))
+            .ToList();
         repositoryMock
             .Setup(x => x.Search(
                 It.Is<IQuerySpecification<ConversationQueryModel>>(spec =>
@@ -137,7 +138,7 @@ public class ListUserConversationsTest : ConversationQueryUseCasesBaseFixture
             .ReturnsAsync(new SearchOutput<ConversationQueryModel>(
                 currentPage: input.Page <= 0 ? 1 : input.Page,
                 perPage: input.PerPage <= 0 ? 20 : Math.Min(input.PerPage, 100),
-                total: listConversations.Count,
+                total: expectedItems.Count,
                 items: expectedItems
             ));
         var useCase = new UseCase.ListUserConversations(
@@ -149,8 +150,8 @@ public class ListUserConversationsTest : ConversationQueryUseCasesBaseFixture
         output.Should().NotBeNull();
         output.Page.Should().Be(input.Page <= 0 ? 1 : input.Page);
         output.PerPage.Should().Be(input.PerPage <= 0 ? 20 : Math.Min(input.PerPage, 100));
-        output.Total.Should().Be(listConversations.Count);
-        output.Items.Should().HaveCount(listConversations.Count);
+        output.Total.Should().Be(expectedItems.Count);
+        output.Items.Should().HaveCount(expectedItems.Count);
         output.Items.ToList().ForEach(outputItem =>
         {
             var expectedItem = listConversations.FirstOrDefault(c => c.Id == outputItem.Id);
