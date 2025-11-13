@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shared.Infra.Outbox.Interfaces;
-using Shared.Infra.Outbox.Models;
 using UnitOfWorkInfra = Helix.Chat.Infra.Data.EF;
 
 namespace Helix.Chat.IntegrationTests.Infra.Data.EF.UnitOfWork;

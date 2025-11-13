@@ -1,6 +1,4 @@
-﻿using Bogus;
-using Helix.Chat.Infra.Data.EF;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Helix.Chat.IntegrationTests.Base;
 public class BaseFixture

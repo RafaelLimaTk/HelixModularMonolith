@@ -30,7 +30,8 @@ public static class ChatModule
         services.AddDomainEventsWithAssemblies(ChatAssemblies.All);
         services.AddReadModelScanning(ChatAssemblies.All);
 
-        services.AddChatRegister();
+        services.AddChatQueryRegister();
+        services.AddChatInfraRegister();
 
         return services;
     }

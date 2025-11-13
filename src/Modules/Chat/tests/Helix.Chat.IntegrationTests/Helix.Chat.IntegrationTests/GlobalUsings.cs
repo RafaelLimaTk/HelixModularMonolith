@@ -1,7 +1,13 @@
 ﻿global using Bogus;
 global using FluentAssertions;
 global using Helix.Chat.Domain.Entities;
+global using Helix.Chat.Infra.Data.EF;
 global using Helix.Chat.IntegrationTests.Base;
+global using Helix.Chat.IntegrationTests.Infra.Data.EF.Common;
+global using Microsoft.EntityFrameworkCore;
 global using Moq;
-global using Shared.Application;
 global using Shared.Domain.SeedWorks;
+global using Shared.Infra.Outbox.Interfaces;
+global using Shared.Infra.Outbox.Models;
+global using Xunit;
+global using Repository = Helix.Chat.Infra.Data.EF.Repositories;
