@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Shared\Shared.Endpoints\Shared.Endpoints.csproj" />
     <ProjectReference Include="..\Helix.Chat.Application\Helix.Chat.Application.csproj" />
+    <ProjectReference Include="..\Helix.Chat.Infra.Data.EF\Helix.Chat.Infra.Data.EF.csproj" />
     <ProjectReference Include="..\Helix.Chat.Query\Helix.Chat.Query.csproj" />
   </ItemGroup>
 
