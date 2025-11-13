@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Helix.Chat.IntegrationTests.Base;
+﻿namespace Helix.Chat.IntegrationTests.Base;
 public class BaseFixture
 {
     public BaseFixture()

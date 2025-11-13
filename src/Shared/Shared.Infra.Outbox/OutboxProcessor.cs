@@ -82,6 +82,11 @@ public sealed class OutboxProcessor : BackgroundService
 
                 await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Outbox: processor canceled.");
+                break;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in outbox processor loop");
