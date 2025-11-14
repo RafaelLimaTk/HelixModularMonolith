@@ -8,9 +8,6 @@ public class HelixChatDbContext(
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<Message> Messages => Set<Message>();
 
-    public DbSet<ConversationsParticipants> ConversationsParticipants
-        => Set<ConversationsParticipants>();
-
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)

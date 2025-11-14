@@ -6,6 +6,7 @@ global using Helix.Chat.IntegrationTests.Base;
 global using Helix.Chat.IntegrationTests.Infra.Data.EF.Common;
 global using Microsoft.EntityFrameworkCore;
 global using Moq;
+global using Shared.Application.Exceptions;
 global using Shared.Domain.SeedWorks;
 global using Shared.Infra.Outbox.Interfaces;
 global using Shared.Infra.Outbox.Models;
