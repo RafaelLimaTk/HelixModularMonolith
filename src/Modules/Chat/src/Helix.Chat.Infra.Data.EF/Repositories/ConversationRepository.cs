@@ -12,18 +12,14 @@ public class ConversationRepository(HelixChatDbContext context) : IConversationR
 
     public async Task<Conversation> Get(Guid id, CancellationToken cancellationToken)
     {
-        var conversation = await _conversations.AsNoTracking().FirstOrDefaultAsync(
-            conversation => conversation.Id == id,
-            cancellationToken
-        );
+        var conversation = await _conversations
+            .FirstOrDefaultAsync(conversation => conversation.Id == id, cancellationToken);
         NotFoundException.ThrowIfNull(conversation, $"Conversation '{id}' not found.");
         return conversation!;
     }
 
-    public Task Update(Conversation aggregate, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    public Task Update(Conversation conversation, CancellationToken _)
+        => Task.FromResult(_conversations.Update(conversation));
 
     public Task Delete(Conversation aggregate, CancellationToken cancellationToken)
     {

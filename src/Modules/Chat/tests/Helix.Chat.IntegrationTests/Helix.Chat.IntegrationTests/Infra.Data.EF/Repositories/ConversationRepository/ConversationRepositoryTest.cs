@@ -96,4 +96,39 @@ public class ConversationRepositoryTest(ConversationRepositoryTestFixture fixtur
             .ThrowAsync<NotFoundException>()
             .WithMessage($"Conversation '{nonExistentId}' not found.");
     }
+
+    [Fact(DisplayName = nameof(Update))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationRepository - Repositories")]
+    public async Task Update()
+    {
+        var participantsList = _fixture.GetParticipantIds();
+        var exampleConversation = _fixture.GetConversationExample(userIds: participantsList);
+        using var dbContext = _fixture.CreateDbContext();
+        await dbContext.Conversations.AddAsync(exampleConversation);
+        await dbContext.SaveChangesAsync();
+        var newParticipantId = Guid.NewGuid();
+        var dbContextAct = _fixture.CreateDbContext(true);
+        var conversationRepository =
+            new Repository.ConversationRepository(dbContextAct);
+        var savedConversation = await conversationRepository.Get(exampleConversation.Id, CancellationToken.None);
+        var added = savedConversation.AddParticipant(newParticipantId);
+        added.Should().BeTrue();
+        var expectedParticipants = savedConversation.Participants
+            .Select(p => (p.UserId, p.JoinedAt))
+            .ToList();
+
+        await conversationRepository.Update(savedConversation, CancellationToken.None);
+        await dbContextAct.SaveChangesAsync(CancellationToken.None);
+
+        var assertsDbContext = _fixture.CreateDbContext(true);
+        var dbConversation = await assertsDbContext.Conversations
+            .FindAsync(exampleConversation.Id);
+        dbConversation.Should().NotBeNull();
+        dbConversation.Participants.Should()
+            .HaveCount(expectedParticipants.Count);
+        dbConversation.Participants
+            .Select(p => (p.UserId, p.JoinedAt))
+            .Should()
+            .BeEquivalentTo(expectedParticipants);
+    }
 }
