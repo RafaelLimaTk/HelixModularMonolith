@@ -61,6 +61,26 @@ public class ConversationRepositoryTest(ConversationRepositoryTestFixture fixtur
                     .Select(participant => (participant.UserId, participant.JoinedAt)));
     }
 
+    [Fact(DisplayName = nameof(GetWithoutParticipants))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationRepository - Repositories")]
+    public async Task GetWithoutParticipants()
+    {
+        var exampleConversation = _fixture.GetConversationExample();
+        using var dbContext = _fixture.CreateDbContext();
+        await dbContext.Conversations.AddAsync(exampleConversation);
+        await dbContext.SaveChangesAsync();
+        var conversationRepository =
+            new Repository.ConversationRepository(_fixture.CreateDbContext(true));
+
+        var conversation = await conversationRepository.Get(exampleConversation.Id, CancellationToken.None);
+
+        conversation.Should().NotBeNull();
+        conversation.Id.Should().Be(exampleConversation.Id);
+        conversation.Title.Should().Be(exampleConversation.Title);
+        conversation.CreatedAt.Should().Be(exampleConversation.CreatedAt);
+        conversation.Participants.Should().BeEmpty();
+    }
+
     [Fact(DisplayName = nameof(GetThrowIfNotFind))]
     [Trait("Chat/Integration/Infra.Data", "ConversationRepository - Repositories")]
     public async Task GetThrowIfNotFind()
