@@ -131,4 +131,27 @@ public class ConversationRepositoryTest(ConversationRepositoryTestFixture fixtur
             .Should()
             .BeEquivalentTo(expectedParticipants);
     }
+
+    [Fact(DisplayName = nameof(Delete))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationRepository - Repositories")]
+    public async Task Delete()
+    {
+        var participantsList = _fixture.GetParticipantIds();
+        var exampleConversation = _fixture.GetConversationExample(userIds: participantsList);
+        using var dbContext = _fixture.CreateDbContext();
+        await dbContext.Conversations.AddAsync(exampleConversation);
+        await dbContext.SaveChangesAsync();
+        var dbContextAct = _fixture.CreateDbContext(true);
+        var conversationRepository =
+            new Repository.ConversationRepository(dbContextAct);
+        var savedConversation = await conversationRepository.Get(exampleConversation.Id, CancellationToken.None);
+
+        await conversationRepository.Delete(savedConversation, CancellationToken.None);
+        await dbContextAct.SaveChangesAsync(CancellationToken.None);
+
+        var assertsDbContext = _fixture.CreateDbContext(true);
+        var dbConversation = await assertsDbContext.Conversations
+            .FindAsync(exampleConversation.Id);
+        dbConversation.Should().BeNull();
+    }
 }

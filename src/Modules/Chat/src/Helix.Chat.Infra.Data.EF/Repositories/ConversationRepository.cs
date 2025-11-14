@@ -21,8 +21,6 @@ public class ConversationRepository(HelixChatDbContext context) : IConversationR
     public Task Update(Conversation conversation, CancellationToken _)
         => Task.FromResult(_conversations.Update(conversation));
 
-    public Task Delete(Conversation aggregate, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    public Task Delete(Conversation conversation, CancellationToken _)
+        => Task.FromResult(_conversations.Remove(conversation));
 }
