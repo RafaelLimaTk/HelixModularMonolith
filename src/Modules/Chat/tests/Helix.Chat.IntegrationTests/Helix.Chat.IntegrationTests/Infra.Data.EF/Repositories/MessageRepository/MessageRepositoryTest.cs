@@ -27,4 +27,25 @@ public class MessageRepositoryTest(MessageRepositoryTestFixture fixture)
         dbMessage.SentAt.Should().BeCloseTo(exampleMessage.SentAt, TimeSpan.FromSeconds(1));
         dbMessage.SenderId.Should().Be(exampleMessage.SenderId);
     }
+
+    [Fact(DisplayName = nameof(Get))]
+    [Trait("Chat/Integration/Infra.Data", "MessageRepository - Repositories")]
+    public async Task Get()
+    {
+        var exampleMessage = _fixture.GetMessageExample();
+        await using var context = _fixture.CreateDbContext();
+        await context.Messages.AddAsync(exampleMessage);
+        await context.SaveChangesAsync();
+        var messageRepository =
+            new Repository.MessageRepository(_fixture.CreateDbContext(true));
+
+        var message = await messageRepository.Get(exampleMessage.Id, CancellationToken.None);
+
+        message.Should().NotBeNull();
+        message.Id.Should().Be(exampleMessage.Id);
+        message.Content.Should().Be(exampleMessage.Content);
+        message.ConversationId.Should().Be(exampleMessage.ConversationId);
+        message.SentAt.Should().BeCloseTo(exampleMessage.SentAt, TimeSpan.FromSeconds(1));
+        message.SenderId.Should().Be(exampleMessage.SenderId);
+    }
 }

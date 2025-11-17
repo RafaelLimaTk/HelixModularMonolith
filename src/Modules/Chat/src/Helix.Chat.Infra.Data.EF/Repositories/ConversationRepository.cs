@@ -1,7 +1,4 @@
-﻿using Helix.Chat.Domain.Interfaces;
-using Shared.Application.Exceptions;
-
-namespace Helix.Chat.Infra.Data.EF.Repositories;
+﻿namespace Helix.Chat.Infra.Data.EF.Repositories;
 public class ConversationRepository(HelixChatDbContext context) : IConversationRepository
 {
     private readonly HelixChatDbContext _context = context;
