@@ -1,6 +1,6 @@
 ﻿using Helix.Chat.Query.Application.Common;
 
-namespace Helix.Chat.Query.Application.UseCases.ListMessagesByConversation;
+namespace Helix.Chat.Query.Application.UseCases.Conversation.ListMessagesByConversation;
 public sealed class ListMessagesByConversationOutput
     : PaginatedListOutput<MessageQueryModel>
 {

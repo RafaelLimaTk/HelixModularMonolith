@@ -1,7 +1,7 @@
 ﻿using Shared.Query.Specifications;
 using System.Linq.Expressions;
 
-namespace Helix.Chat.Query.Application.UseCases.ListUserConversations;
+namespace Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 
 public sealed class ListUserConversationsSpecification : IQuerySpecification<ConversationQueryModel>
 {

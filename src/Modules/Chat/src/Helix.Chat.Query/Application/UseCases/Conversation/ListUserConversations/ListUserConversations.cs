@@ -1,4 +1,5 @@
-﻿namespace Helix.Chat.Query.Application.UseCases.ListUserConversations;
+﻿namespace Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
+
 public class ListUserConversations(IConversationsReadRepository conversationsReadRepository) : IListUserConversations
 {
     private readonly IConversationsReadRepository _conversationsReadRepository = conversationsReadRepository;

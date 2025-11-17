@@ -1,4 +1,4 @@
-﻿using Helix.Chat.Query.Application.UseCases.ListMessagesByConversation;
+﻿using Helix.Chat.Query.Application.UseCases.Conversation.ListMessagesByConversation;
 using Helix.Chat.UnitTests.Query.Application.Conversation.Common;
 
 namespace Helix.Chat.UnitTests.Query.Application.Conversation.ListMessagesByConversation;

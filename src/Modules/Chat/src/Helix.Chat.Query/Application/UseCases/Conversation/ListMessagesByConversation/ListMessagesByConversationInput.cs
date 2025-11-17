@@ -1,7 +1,7 @@
 ﻿using Helix.Chat.Query.Application.Common;
 using MediatR;
 
-namespace Helix.Chat.Query.Application.UseCases.ListMessagesByConversation;
+namespace Helix.Chat.Query.Application.UseCases.Conversation.ListMessagesByConversation;
 public sealed class ListMessagesByConversationInput
     : PaginatedListInput, IRequest<ListMessagesByConversationOutput>
 {

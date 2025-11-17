@@ -5,7 +5,7 @@ namespace Helix.Chat.Query.Data.Configurations;
 
 public sealed class MessageConfiguration : IReadDbConfiguration
 {
-    public string CollectionName => "messages";
+    public string CollectionName => CollectionNames.Messages;
     public Type ModelType => typeof(MessageQueryModel);
 
     public void ConfigureClassMap()

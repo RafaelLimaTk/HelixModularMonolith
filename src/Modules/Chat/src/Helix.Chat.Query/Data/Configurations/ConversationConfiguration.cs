@@ -2,9 +2,10 @@
 using MongoDB.Bson.Serialization;
 
 namespace Helix.Chat.Query.Data.Configurations;
+
 public sealed class ConversationConfiguration : IReadDbConfiguration
 {
-    public string CollectionName => "conversations";
+    public string CollectionName => CollectionNames.Conversations;
     public Type ModelType => typeof(ConversationQueryModel);
 
     public void ConfigureClassMap()

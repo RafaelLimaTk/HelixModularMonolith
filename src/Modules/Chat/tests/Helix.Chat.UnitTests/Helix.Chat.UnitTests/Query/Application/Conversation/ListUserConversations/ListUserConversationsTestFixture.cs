@@ -1,4 +1,4 @@
-﻿using Helix.Chat.Query.Application.UseCases.ListUserConversations;
+﻿using Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 using Helix.Chat.Query.Models;
 using Helix.Chat.UnitTests.Query.Application.Conversation.Common;
 using Shared.Query.Interfaces.SearchableRepository;

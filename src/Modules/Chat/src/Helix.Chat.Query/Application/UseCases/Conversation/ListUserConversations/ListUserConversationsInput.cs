@@ -1,7 +1,7 @@
 ﻿using Helix.Chat.Query.Application.Common;
 using MediatR;
 
-namespace Helix.Chat.Query.Application.UseCases.ListUserConversations;
+namespace Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 public sealed class ListUserConversationsInput(
     Guid userId,
     int page = 1,

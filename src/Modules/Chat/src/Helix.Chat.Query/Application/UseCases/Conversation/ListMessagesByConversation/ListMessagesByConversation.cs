@@ -1,4 +1,5 @@
-﻿namespace Helix.Chat.Query.Application.UseCases.ListMessagesByConversation;
+﻿namespace Helix.Chat.Query.Application.UseCases.Conversation.ListMessagesByConversation;
+
 public class ListMessagesByConversation(IMessagesReadRepository messagesReadRepository) : IListMessagesByConversation
 {
     private readonly IMessagesReadRepository _messagesReadRepository = messagesReadRepository;

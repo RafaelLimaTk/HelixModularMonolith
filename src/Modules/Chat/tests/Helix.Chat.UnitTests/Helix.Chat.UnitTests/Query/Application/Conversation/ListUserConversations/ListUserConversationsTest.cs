@@ -1,6 +1,6 @@
-﻿using Helix.Chat.Query.Application.UseCases.ListUserConversations;
+﻿using Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 using Helix.Chat.UnitTests.Query.Application.Conversation.Common;
-using UseCase = Helix.Chat.Query.Application.UseCases.ListUserConversations;
+using UseCase = Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 
 namespace Helix.Chat.UnitTests.Query.Application.Conversation.ListUserConversations;
 

@@ -3,14 +3,15 @@ using MongoDB.Bson;
 
 
 namespace Helix.Chat.Query.Data.Repositories;
+
 public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
         : IConversationsReadRepository
 {
-    private readonly IMongoCollection<ConversationQueryModel> _col
-        = ctx.GetCollection<ConversationQueryModel>("conversations");
+    private readonly IMongoCollection<ConversationQueryModel> _conversations
+        = ctx.GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
 
     public async Task<ConversationQueryModel?> Get(Guid id, CancellationToken ct)
-        => await _col.Find(x => x.Id == id).FirstOrDefaultAsync(ct);
+        => await _conversations.Find(x => x.Id == id).FirstOrDefaultAsync(ct);
 
     public async Task<SearchOutput<ConversationQueryModel>> Search(
         SearchInput request, CancellationToken ct)
@@ -19,8 +20,8 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
         var filter = BuildFilter(request.Search);
         var sort = BuildSort(request.OrderBy, request.Order);
 
-        var total = await _col.CountDocumentsAsync(filter, cancellationToken: ct);
-        var items = await _col.Find(filter)
+        var total = await _conversations.CountDocumentsAsync(filter, cancellationToken: ct);
+        var items = await _conversations.Find(filter)
             .Sort(sort).Skip((page - 1) * perPage).Limit(perPage)
             .ToListAsync(ct);
 
@@ -46,8 +47,8 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
 
         var (page, perPage) = Normalize(spec.Page, spec.PerPage);
 
-        var total = await _col.CountDocumentsAsync(filter, cancellationToken: ct);
-        var items = await _col.Find(filter)
+        var total = await _conversations.CountDocumentsAsync(filter, cancellationToken: ct);
+        var items = await _conversations.Find(filter)
             .Sort(sort).Skip((page - 1) * perPage).Limit(perPage)
             .ToListAsync(ct);
 

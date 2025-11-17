@@ -1,6 +1,7 @@
-﻿using Helix.Chat.Query.Application.UseCases.ListUserConversations;
+﻿using Helix.Chat.Query.Application.UseCases.Conversation.ListUserConversations;
 
 namespace Helix.Chat.UnitTests.Query.Application.Conversation.ListUserConversations;
+
 public class ListUserConversationsTestDataGenerator
 {
     public static IEnumerable<object[]> GetInputsWithoutAllParameter(int times = 14)
