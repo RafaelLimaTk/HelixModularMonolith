@@ -16,8 +16,6 @@ public class MessageRepository(HelixChatDbContext context) : IMessageRepository
         return message!;
     }
 
-    public Task Update(Message message, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+    public Task Update(Message message, CancellationToken _)
+        => Task.FromResult(_messages.Update(message));
 }
