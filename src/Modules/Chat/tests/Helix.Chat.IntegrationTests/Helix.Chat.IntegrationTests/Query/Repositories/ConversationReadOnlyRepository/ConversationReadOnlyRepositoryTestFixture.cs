@@ -1,5 +1,4 @@
 ﻿using Helix.Chat.IntegrationTests.Query.Base;
-using Helix.Chat.Query.Models;
 
 namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
 
@@ -13,23 +12,28 @@ public class ConversationReadOnlyRepositoryTestFixture
     : QueryBaseFixture
 {
     public ConversationQueryModel GetExampleConversation(
-        Guid? id = null,
+        string? title = null,
         IEnumerable<Guid>? participantIds = null,
         DateTime? createdAt = null,
         DateTime? updatedAt = null)
     {
-        var conversationId = id ?? Guid.NewGuid();
-        var created = createdAt ?? DateTime.UtcNow.AddMinutes(-Faker.Random.Int(0, 60));
-        var updated = updatedAt ?? created.AddMinutes(Faker.Random.Int(0, 60));
+        var resolvedTitle = title ?? Faker.Lorem.Sentence(3);
 
-        var participants = (participantIds ?? Enumerable.Range(0, 3)
-            .Select(_ => Guid.NewGuid()))
-            .ToList();
+        var created = createdAt
+            ?? DateTime.UtcNow.AddMinutes(-Faker.Random.Int(0, 60));
+
+        var updated = updatedAt
+            ?? created.AddMinutes(Faker.Random.Int(0, 60));
+
+        var participants = participantIds?.ToList()
+            ?? Enumerable.Range(0, Faker.Random.Int(2, 5))
+                .Select(_ => Guid.NewGuid())
+                .ToList();
 
         return new ConversationQueryModel
         {
-            Id = conversationId,
-            Title = Faker.Lorem.Sentence(3),
+            Id = Guid.NewGuid(),
+            Title = resolvedTitle,
             ParticipantIds = participants,
             CreatedAt = created,
             UpdatedAt = updated,
@@ -40,4 +44,7 @@ public class ConversationReadOnlyRepositoryTestFixture
         => Enumerable.Range(0, length)
             .Select(_ => GetExampleConversation())
             .ToList();
+
+    public List<ConversationQueryModel> GetExampleConversationsListByTitles(List<string> titles)
+        => titles.Select(title => GetExampleConversation(title: title)).ToList();
 }

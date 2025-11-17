@@ -2,7 +2,6 @@
 using Helix.Chat.Query.Data.Conventions;
 using Mongo2Go;
 using MongoDB.Bson;
-using Shared.Query.Interfaces;
 
 namespace Helix.Chat.IntegrationTests.Query.Base;
 
@@ -21,16 +20,18 @@ public abstract class QueryBaseFixture : IDisposable
         Database = client.GetDatabase("integration-query-tests-db");
 
         Faker = new Faker("pt_BR");
-        RegisterReadModelMappings();
+        RegisterReadModelConfigurations();
     }
 
-    public IChatReadDbContext CreateReadDbContext()
-        => new ChatReadDbContext(Database);
+    public IChatReadDbContext CreateReadDbContext(bool preserveData = false)
+    {
+        var context = new ChatReadDbContext(Database);
+        if (!preserveData)
+            context.EnsureDeleted();
+        return context;
+    }
 
-    public void Dispose()
-        => _runner.Dispose();
-
-    private void RegisterReadModelMappings()
+    private void RegisterReadModelConfigurations()
     {
         var configurations = new IReadDbConfiguration[]
         {
@@ -53,5 +54,15 @@ public abstract class QueryBaseFixture : IDisposable
 
         public IMongoCollection<T> GetCollection<T>(string? name)
             => _database.GetCollection<T>(name);
+
+        public void EnsureDeleted()
+            => CollectionNames.ListCollectionNames().ForEach(collectionName =>
+            {
+                var collection = _database.GetCollection<BsonDocument>(collectionName);
+                collection.DeleteMany(FilterDefinition<BsonDocument>.Empty);
+            });
     }
+
+    public void Dispose()
+        => _runner.Dispose();
 }

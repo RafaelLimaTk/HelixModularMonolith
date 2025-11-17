@@ -1,8 +1,4 @@
-﻿using Helix.Chat.Query.Data;
-using Helix.Chat.Query.Models;
-using Shared.Query.Interfaces.SearchableRepository;
-
-namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
+﻿namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
 
 [Collection(nameof(ConversationReadOnlyRepositoryTestFixture))]
 public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTestFixture fixture)
@@ -19,7 +15,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
             .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
         await conversationsCollection.InsertOneAsync(exampleConversation);
         var conversationRepository =
-            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext());
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
 
         var conversation = await conversationRepository
             .Get(exampleConversation.Id, CancellationToken.None);
@@ -36,16 +32,16 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
     [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
     public async Task Search()
     {
-        var exampleConversations = _fixture.GetExampleConversationsList(5);
+        var exampleConversations = _fixture.GetExampleConversationsList(6);
         var dbContext = _fixture.CreateReadDbContext();
         var conversationsCollection = dbContext
             .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
         await conversationsCollection.InsertManyAsync(exampleConversations);
         var conversationRepository =
-            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext());
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
         var input = new SearchInput(
             page: 1,
-            perPage: 10,
+            perPage: 6,
             search: "",
             orderBy: "",
             order: SearchOrder.Desc);
@@ -57,7 +53,112 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         conversations.PerPage.Should().Be(input.PerPage);
         conversations.Total.Should().Be(exampleConversations.Count);
         conversations.Items.Should().HaveCount(input.PerPage);
-        conversations.Items.Should().BeInDescendingOrder(c => c.CreatedAt);
+        conversations.Items.ToList().ForEach(conversation =>
+        {
+            var expectedConversation = exampleConversations
+                .First(ec => ec.Id == conversation.Id);
+            conversation.Title.Should().Be(expectedConversation.Title);
+            conversation.ParticipantIds.Should().BeEquivalentTo(expectedConversation.ParticipantIds);
+            conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
+            conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
+        });
+    }
+
+    [Theory(DisplayName = nameof(ListReturnsPaginated))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData(10, 1, 5, 5)]
+    [InlineData(10, 2, 5, 5)]
+    [InlineData(7, 2, 5, 2)]
+    [InlineData(7, 3, 5, 0)]
+    public async Task ListReturnsPaginated(
+        int quantityConversationsToGenerate,
+        int page,
+        int perPage,
+        int expectedQuantityItems)
+    {
+        var exampleConversations = _fixture.GetExampleConversationsList(quantityConversationsToGenerate);
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var input = new SearchInput(
+            page: page,
+            perPage: perPage,
+            search: "",
+            orderBy: "",
+            order: SearchOrder.Desc);
+
+        var conversations = await conversationRepository.Search(input, CancellationToken.None);
+
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(input.Page);
+        conversations.PerPage.Should().Be(input.PerPage);
+        conversations.Total.Should().Be(quantityConversationsToGenerate);
+        conversations.Items.Should().HaveCount(expectedQuantityItems);
+        conversations.Items.ToList().ForEach(conversation =>
+        {
+            var expectedConversation = exampleConversations
+                .First(ec => ec.Id == conversation.Id);
+            conversation.Title.Should().Be(expectedConversation.Title);
+            conversation.ParticipantIds.Should().BeEquivalentTo(expectedConversation.ParticipantIds);
+            conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
+            conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
+        });
+    }
+
+    [Theory(DisplayName = nameof(ListSearchByText))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData("Support", 1, 5, 1, 1)]
+    [InlineData("Questions", 1, 5, 2, 2)]
+    [InlineData("Review", 2, 5, 0, 1)]
+    [InlineData("Project", 1, 5, 4, 4)]
+    [InlineData("Project", 1, 2, 2, 4)]
+    [InlineData("Project", 2, 3, 1, 4)]
+    [InlineData("Project Other", 1, 3, 0, 0)]
+    [InlineData("Team", 1, 5, 2, 2)]
+    public async Task ListSearchByText(
+        string search,
+        int page,
+        int perPage,
+        int expectedQuantityItems,
+        int expectedTotalItems)
+    {
+        var titles = new List<string>
+        {
+            "Project Discussion",
+            "Team Meeting",
+            "General Questions",
+            "Support Chat",
+            "Project Review",
+            "Questions and Answers",
+            "Project Planning",
+            "Team Outing",
+            "Project updates"
+        };
+        var exampleConversations = _fixture
+            .GetExampleConversationsListByTitles(titles);
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var input = new SearchInput(
+            page: page,
+            perPage: perPage,
+            search: search,
+            orderBy: "",
+            order: SearchOrder.Desc);
+
+        var conversations = await conversationRepository.Search(input, CancellationToken.None);
+
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(input.Page);
+        conversations.PerPage.Should().Be(input.PerPage);
+        conversations.Total.Should().Be(expectedTotalItems);
+        conversations.Items.Should().HaveCount(expectedQuantityItems);
         conversations.Items.ToList().ForEach(conversation =>
         {
             var expectedConversation = exampleConversations
