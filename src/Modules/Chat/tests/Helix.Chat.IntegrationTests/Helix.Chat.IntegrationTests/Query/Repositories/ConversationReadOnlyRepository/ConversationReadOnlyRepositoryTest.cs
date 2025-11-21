@@ -64,13 +64,36 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         });
     }
 
-    [Theory(DisplayName = nameof(ListReturnsPaginated))]
+    [Fact(DisplayName = nameof(SearchReturnsEmptyWhenEmpty))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    public async Task SearchReturnsEmptyWhenEmpty()
+    {
+        IChatReadDbContext dbContext = _fixture.CreateReadDbContext();
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(dbContext);
+        var input = new SearchInput(
+            page: 1,
+            perPage: 6,
+            search: "",
+            orderBy: "",
+            order: SearchOrder.Desc);
+
+        var conversations = await conversationRepository.Search(input, CancellationToken.None);
+
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(input.Page);
+        conversations.PerPage.Should().Be(input.PerPage);
+        conversations.Total.Should().Be(0);
+        conversations.Items.Should().HaveCount(0);
+    }
+
+    [Theory(DisplayName = nameof(SearchRetursPaginated))]
     [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
     [InlineData(10, 1, 5, 5)]
     [InlineData(10, 2, 5, 5)]
     [InlineData(7, 2, 5, 2)]
     [InlineData(7, 3, 5, 0)]
-    public async Task ListReturnsPaginated(
+    public async Task SearchRetursPaginated(
         int quantityConversationsToGenerate,
         int page,
         int perPage,
@@ -108,7 +131,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         });
     }
 
-    [Theory(DisplayName = nameof(ListSearchByText))]
+    [Theory(DisplayName = nameof(SearchByText))]
     [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
     [InlineData("Support", 1, 5, 1, 1)]
     [InlineData("Questions", 1, 5, 2, 2)]
@@ -118,7 +141,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
     [InlineData("Project", 2, 3, 1, 4)]
     [InlineData("Project Other", 1, 3, 0, 0)]
     [InlineData("Team", 1, 5, 2, 2)]
-    public async Task ListSearchByText(
+    public async Task SearchByText(
         string search,
         int page,
         int perPage,
@@ -168,5 +191,58 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
             conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
             conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
         });
+    }
+
+    [Theory(DisplayName = nameof(SearchOrdered))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData("title", "asc")]
+    [InlineData("title", "desc")]
+    [InlineData("createdAt", "asc")]
+    [InlineData("createdAt", "desc")]
+    [InlineData("updatedAt", "asc")]
+    [InlineData("updatedAt", "desc")]
+    [InlineData("", "asc")]
+    public async Task SearchOrdered(string orderBy, string order)
+    {
+        var dbContext = _fixture.CreateReadDbContext();
+        var exampleConversations = _fixture.GetExampleConversationsList(10);
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var useCaseOrder = order == "asc" ? SearchOrder.Asc : SearchOrder.Desc;
+        var input = new SearchInput(
+            page: 1,
+            perPage: 10,
+            search: "",
+            orderBy: orderBy,
+            order: useCaseOrder);
+
+        var conversations = await conversationRepository.Search(input, CancellationToken.None);
+
+        var expectedOrderedList = _fixture.CloneConversationsListOrdered(
+            exampleConversations,
+            input.OrderBy,
+            input.Order
+        );
+        conversations.Should().NotBeNull();
+        conversations.Items.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(input.Page);
+        conversations.PerPage.Should().Be(input.PerPage);
+        conversations.Total.Should().Be(exampleConversations.Count);
+        conversations.Items.Should().HaveCount(exampleConversations.Count);
+        for (int index = 0; index < expectedOrderedList.Count; index++)
+        {
+            var outputItem = conversations.Items[index];
+            var exampleItem = expectedOrderedList[index];
+            outputItem.Should().NotBeNull();
+            exampleItem.Should().NotBeNull();
+            outputItem.Id.Should().Be(exampleItem.Id);
+            outputItem.Title.Should().Be(exampleItem.Title);
+            outputItem.ParticipantIds.Should().BeEquivalentTo(exampleItem.ParticipantIds);
+            outputItem.CreatedAt.Should().BeCloseTo(exampleItem.CreatedAt, TimeSpan.FromSeconds(1));
+            outputItem.UpdatedAt.Should().BeCloseTo(exampleItem.UpdatedAt, TimeSpan.FromSeconds(1));
+        }
     }
 }

@@ -41,10 +41,41 @@ public class ConversationReadOnlyRepositoryTestFixture
     }
 
     public List<ConversationQueryModel> GetExampleConversationsList(int length = 10)
-        => Enumerable.Range(0, length)
-            .Select(_ => GetExampleConversation())
+    {
+        var baseTime = DateTime.UtcNow;
+        return Enumerable.Range(0, length)
+            .Select(i => GetExampleConversation(
+                createdAt: baseTime.AddMilliseconds(i * 10),
+                updatedAt: baseTime.AddMilliseconds((i * 10) + 1)))
             .ToList();
+    }
 
     public List<ConversationQueryModel> GetExampleConversationsListByTitles(List<string> titles)
         => titles.Select(title => GetExampleConversation(title: title)).ToList();
+
+    public List<ConversationQueryModel> CloneConversationsListOrdered(
+        List<ConversationQueryModel> conversationsList,
+        string orderBy,
+        SearchOrder order
+    )
+    {
+        var listClone = new List<ConversationQueryModel>(conversationsList);
+        var orderedEnumerable = (orderBy.ToLower(), order) switch
+        {
+            ("title", SearchOrder.Asc) => listClone.OrderBy(c => c.Title)
+                .ThenBy(c => c.Id),
+            ("title", SearchOrder.Desc) => listClone.OrderByDescending(c => c.Title)
+                .ThenByDescending(c => c.Id),
+            ("createdat", SearchOrder.Asc) => listClone.OrderBy(c => c.CreatedAt)
+                .ThenBy(c => c.Title),
+            ("createdat", SearchOrder.Desc) => listClone.OrderByDescending(c => c.CreatedAt)
+                .ThenByDescending(c => c.Title),
+            ("updatedat", SearchOrder.Asc) => listClone.OrderBy(c => c.UpdatedAt)
+                .ThenBy(c => c.Title),
+            ("updatedat", SearchOrder.Desc) => listClone.OrderByDescending(c => c.UpdatedAt)
+                .ThenByDescending(c => c.Title),
+            _ => listClone.OrderBy(c => c.Title).ThenBy(c => c.Id),
+        };
+        return orderedEnumerable.ToList();
+    }
 }

@@ -73,16 +73,24 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
 
     private static SortDefinition<ConversationQueryModel> BuildSort(string? orderBy, SearchOrder order)
     {
-        var s = (orderBy ?? "updatedAt").Trim();
+        var sort = string.IsNullOrWhiteSpace(orderBy) ? "title" : orderBy.Trim();
         var desc = order == SearchOrder.Desc;
         var sb = Builders<ConversationQueryModel>.Sort;
 
-        return s.ToLowerInvariant() switch
+        return sort.ToLowerInvariant() switch
         {
-            "title" => desc ? sb.Descending(x => x.Title) : sb.Ascending(x => x.Title),
-            "createdat" => desc ? sb.Descending(x => x.CreatedAt) : sb.Ascending(x => x.CreatedAt),
-            "updatedat" => desc ? sb.Descending(x => x.UpdatedAt) : sb.Ascending(x => x.UpdatedAt),
-            _ => desc ? sb.Descending(x => x.UpdatedAt) : sb.Ascending(x => x.UpdatedAt),
+            "title" => desc
+                ? sb.Descending(x => x.Title).Descending(x => x.Id)
+                : sb.Ascending(x => x.Title).Ascending(x => x.Id),
+            "createdat" => desc
+                ? sb.Descending(x => x.CreatedAt)
+                : sb.Ascending(x => x.CreatedAt),
+            "updatedat" => desc
+                ? sb.Descending(x => x.UpdatedAt)
+                : sb.Ascending(x => x.UpdatedAt),
+            _ => desc
+                ? sb.Descending(x => x.Title).Descending(x => x.Id)
+                : sb.Ascending(x => x.Title).Ascending(x => x.Id),
         };
     }
 }
