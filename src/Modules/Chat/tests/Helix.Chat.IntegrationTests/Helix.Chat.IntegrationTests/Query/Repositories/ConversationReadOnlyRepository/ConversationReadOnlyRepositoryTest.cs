@@ -1,4 +1,6 @@
-﻿namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
+﻿using Shared.Query.Specifications;
+
+namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
 
 [Collection(nameof(ConversationReadOnlyRepositoryTestFixture))]
 public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTestFixture fixture)
@@ -244,5 +246,51 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
             outputItem.CreatedAt.Should().BeCloseTo(exampleItem.CreatedAt, TimeSpan.FromSeconds(1));
             outputItem.UpdatedAt.Should().BeCloseTo(exampleItem.UpdatedAt, TimeSpan.FromSeconds(1));
         }
+    }
+
+    [Fact(DisplayName = nameof(SearchBySpec))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    public async Task SearchBySpec()
+    {
+        var commonParticipants = _fixture.GetExampleParticipantsList();
+        var exampleConversations = _fixture.GetExampleConversationsList(6, commonParticipants);
+        var participantIdSpec = exampleConversations
+            .SelectMany(c => c.ParticipantIds)
+            .Intersect(commonParticipants)
+            .First();
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var spec = new QuerySpecification<ConversationQueryModel>()
+            .Where(c => c.ParticipantIds.Contains(participantIdSpec))
+            .PageSize(1, 5)
+            .OrderByDescending(c => c.CreatedAt);
+
+        var conversations = await conversationRepository.Search(spec, CancellationToken.None);
+
+        var expectedConversations = _fixture.FilterOrderAndPaginate(
+            exampleConversations,
+            predicate: c => c.ParticipantIds.Contains(participantIdSpec),
+            page: spec.Page,
+            perPage: spec.PerPage
+        );
+        var totalMatching = exampleConversations.Count(c => c.ParticipantIds.Contains(participantIdSpec));
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(spec.Page);
+        conversations.PerPage.Should().Be(spec.PerPage);
+        conversations.Total.Should().Be(totalMatching);
+        conversations.Items.Should().HaveCount(expectedConversations.Count);
+        conversations.Items.ToList().ForEach(conversation =>
+        {
+            var expectedConversation = expectedConversations
+                .First(ec => ec.Id == conversation.Id);
+            conversation.Title.Should().Be(expectedConversation.Title);
+            conversation.ParticipantIds.Should().BeEquivalentTo(expectedConversation.ParticipantIds);
+            conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
+            conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
+        });
     }
 }
