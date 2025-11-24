@@ -314,4 +314,127 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         conversations.Total.Should().Be(0);
         conversations.Items.Should().HaveCount(0);
     }
+
+    [Theory(DisplayName = nameof(SearchBySpecReturnsPaginated))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData(10, 1, 5)]
+    [InlineData(10, 2, 5)]
+    [InlineData(7, 2, 5)]
+    [InlineData(7, 3, 5)]
+    public async Task SearchBySpecReturnsPaginated(
+        int quantityConversationsToGenerate,
+        int page,
+        int perPage)
+    {
+        var commonParticipants = _fixture.GetExampleParticipantsList();
+        var exampleConversations = _fixture
+            .GetExampleConversationsList(quantityConversationsToGenerate, commonParticipants);
+        var participantIdSpec = exampleConversations
+            .SelectMany(c => c.ParticipantIds)
+            .Intersect(commonParticipants)
+            .First();
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var spec = new QuerySpecification<ConversationQueryModel>()
+            .Where(c => c.ParticipantIds.Contains(participantIdSpec))
+            .PageSize(page, perPage)
+            .OrderByDescending(c => c.CreatedAt);
+
+        var conversations = await conversationRepository.Search(spec, CancellationToken.None);
+
+        var expectedConversations = _fixture.FilterOrderAndPaginate(
+            exampleConversations,
+            predicate: c => c.ParticipantIds.Contains(participantIdSpec),
+            page: spec.Page,
+            perPage: spec.PerPage
+        );
+        var totalMatching = exampleConversations
+            .Count(c => c.ParticipantIds.Contains(participantIdSpec));
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(spec.Page);
+        conversations.PerPage.Should().Be(spec.PerPage);
+        conversations.Total.Should().Be(totalMatching);
+        conversations.Items.Should().HaveCount(expectedConversations.Count);
+        conversations.Items.ToList().ForEach(conversation =>
+        {
+            var expectedConversation = expectedConversations
+                .First(ec => ec.Id == conversation.Id);
+            conversation.Title.Should().Be(expectedConversation.Title);
+            conversation.ParticipantIds.Should().BeEquivalentTo(expectedConversation.ParticipantIds);
+            conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
+            conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
+        });
+    }
+
+    [Theory(DisplayName = nameof(SearchBySpecAndText))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData("Support", 1, 5, 1, 1)]
+    [InlineData("Questions", 1, 5, 2, 2)]
+    [InlineData("Review", 2, 5, 0, 1)]
+    [InlineData("Project", 1, 5, 4, 4)]
+    [InlineData("Project", 1, 2, 2, 4)]
+    [InlineData("Project", 2, 3, 1, 4)]
+    [InlineData("Project Other", 1, 3, 0, 0)]
+    [InlineData("Team", 1, 5, 2, 2)]
+    public async Task SearchBySpecAndText(
+        string search,
+        int page,
+        int perPage,
+        int expectedQuantityItems,
+        int expectedTotalItems)
+    {
+        var titles = new List<string>
+        {
+            "Project Discussion",
+            "Team Meeting",
+            "General Questions",
+            "Support Chat",
+            "Project Review",
+            "Questions and Answers",
+            "Project Planning",
+            "Team Outing",
+            "Project updates"
+        };
+        var exampleConversations = _fixture
+            .GetExampleConversationsListByTitles(titles);
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var spec = new QuerySpecification<ConversationQueryModel>()
+            .Where(c => c.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase))
+            .PageSize(page, perPage)
+            .OrderByDescending(c => c.CreatedAt);
+
+        var conversations = await conversationRepository.Search(spec, CancellationToken.None);
+
+        var expectedConversations = _fixture.FilterOrderAndPaginate(
+            exampleConversations,
+            predicate: c => c.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase),
+            page: spec.Page,
+            perPage: spec.PerPage
+        );
+        var totalMatching = exampleConversations
+            .Count(ec => ec.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase));
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(spec.Page);
+        conversations.PerPage.Should().Be(spec.PerPage);
+        conversations.Total.Should().Be(expectedTotalItems);
+        conversations.Items.Should().HaveCount(expectedQuantityItems);
+        conversations.Items.ToList().ForEach(conversation =>
+        {
+            var expectedConversation = expectedConversations
+                .First(ec => ec.Id == conversation.Id);
+            conversation.Title.Should().Be(expectedConversation.Title);
+            conversation.ParticipantIds.Should().BeEquivalentTo(expectedConversation.ParticipantIds);
+            conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
+            conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
+        });
+    }
 }
