@@ -1,6 +1,4 @@
-﻿using Helix.Chat.IntegrationTests.Query.Base;
-
-namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
+﻿namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
 
 [CollectionDefinition(nameof(ConversationReadOnlyRepositoryTestFixture))]
 public class ConversationReadOnlyRepositoryTestFixtureCollection
@@ -139,5 +137,41 @@ public class ConversationReadOnlyRepositoryTestFixture
             ("updatedat", SearchOrder.Desc) => source.OrderByDescending(c => c.UpdatedAt).ThenByDescending(c => c.Title),
             _ => source.OrderBy(c => c.Title).ThenBy(c => c.Id),
         };
+    }
+
+    private static readonly Dictionary<string, Expression<Func<ConversationQueryModel, object>>> _orderSelectors
+        = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["title"] = c => c.Title,
+            ["createdAt"] = c => c.CreatedAt,
+            ["updatedAt"] = c => c.UpdatedAt
+        };
+
+    public QuerySpecification<ConversationQueryModel> BuildSpecificationForParticipant(
+        Guid participantId,
+        string? orderBy,
+        SearchOrder sortDirection,
+        int page,
+        int perPage)
+    {
+        var spec = new QuerySpecification<ConversationQueryModel>()
+            .Where(c => c.ParticipantIds.Contains(participantId))
+            .PageSize(page, perPage);
+
+        var sortField = string.IsNullOrWhiteSpace(orderBy)
+            ? "title"
+            : orderBy.Trim();
+
+        if (!_orderSelectors.TryGetValue(sortField, out var selector))
+        {
+            selector = _orderSelectors["title"];
+        }
+
+        if (sortDirection == SearchOrder.Asc)
+            spec.OrderBy(selector);
+        else
+            spec.OrderByDescending(selector);
+
+        return spec;
     }
 }

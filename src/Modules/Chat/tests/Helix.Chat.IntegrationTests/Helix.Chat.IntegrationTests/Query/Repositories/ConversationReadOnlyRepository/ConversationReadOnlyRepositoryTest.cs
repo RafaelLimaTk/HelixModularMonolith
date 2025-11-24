@@ -1,6 +1,4 @@
-﻿using Shared.Query.Specifications;
-
-namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
+﻿namespace Helix.Chat.IntegrationTests.Query.Repositories.ConversationReadOnlyRepository;
 
 [Collection(nameof(ConversationReadOnlyRepositoryTestFixture))]
 public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTestFixture fixture)
@@ -436,5 +434,54 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
             conversation.CreatedAt.Should().BeCloseTo(expectedConversation.CreatedAt, TimeSpan.FromSeconds(1));
             conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
         });
+    }
+
+    [Theory(DisplayName = nameof(SearchBySpecOrdered))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    [InlineData("title", "asc")]
+    [InlineData("title", "desc")]
+    [InlineData("createdAt", "asc")]
+    [InlineData("createdAt", "desc")]
+    [InlineData("updatedAt", "asc")]
+    [InlineData("updatedAt", "desc")]
+    [InlineData("", "asc")]
+    public async Task SearchBySpecOrdered(string orderBy, string order)
+    {
+        var commonParticipants = _fixture.GetExampleParticipantsList();
+        var exampleConversations = _fixture.GetExampleConversationsList(10, commonParticipants);
+        var participantIdSpec = exampleConversations
+            .SelectMany(c => c.ParticipantIds)
+            .Intersect(commonParticipants)
+            .First();
+        var dbContext = _fixture.CreateReadDbContext();
+        var conversationsCollection = dbContext
+            .GetCollection<ConversationQueryModel>(CollectionNames.Conversations);
+        await conversationsCollection.InsertManyAsync(exampleConversations);
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(_fixture.CreateReadDbContext(true));
+        var useCaseOrder = order == "asc" ? SearchOrder.Asc : SearchOrder.Desc;
+        var spec = _fixture.BuildSpecificationForParticipant(participantIdSpec, orderBy, useCaseOrder, page: 1, perPage: 10);
+
+        var conversations = await conversationRepository.Search(spec, CancellationToken.None);
+
+        var filtered = exampleConversations
+            .Where(c => c.ParticipantIds.Contains(participantIdSpec))
+            .ToList();
+        var expectedOrdered = _fixture.CloneConversationsListOrdered(filtered, orderBy, useCaseOrder);
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(spec.Page);
+        conversations.PerPage.Should().Be(spec.PerPage);
+        conversations.Total.Should().Be(filtered.Count);
+        conversations.Items.Should().HaveCount(expectedOrdered.Count);
+        for (int index = 0; index < expectedOrdered.Count; index++)
+        {
+            var outputItem = conversations.Items[index];
+            var expectedItem = expectedOrdered[index];
+            outputItem.Id.Should().Be(expectedItem.Id);
+            outputItem.Title.Should().Be(expectedItem.Title);
+            outputItem.ParticipantIds.Should().BeEquivalentTo(expectedItem.ParticipantIds);
+            outputItem.CreatedAt.Should().BeCloseTo(expectedItem.CreatedAt, TimeSpan.FromSeconds(1));
+            outputItem.UpdatedAt.Should().BeCloseTo(expectedItem.UpdatedAt, TimeSpan.FromSeconds(1));
+        }
     }
 }
