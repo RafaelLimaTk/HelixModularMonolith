@@ -265,7 +265,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         var spec = new QuerySpecification<ConversationQueryModel>()
             .Where(c => c.ParticipantIds.Contains(participantIdSpec))
             .PageSize(1, 5)
-            .OrderByDescending(c => c.CreatedAt);
+            .OrderByDescending(c => c.Title);
 
         var conversations = await conversationRepository.Search(spec, CancellationToken.None);
 
@@ -340,7 +340,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         var spec = new QuerySpecification<ConversationQueryModel>()
             .Where(c => c.ParticipantIds.Contains(participantIdSpec))
             .PageSize(page, perPage)
-            .OrderByDescending(c => c.CreatedAt);
+            .OrderByDescending(c => c.Title);
 
         var conversations = await conversationRepository.Search(spec, CancellationToken.None);
 
@@ -408,7 +408,7 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
         var spec = new QuerySpecification<ConversationQueryModel>()
             .Where(c => c.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase))
             .PageSize(page, perPage)
-            .OrderByDescending(c => c.CreatedAt);
+            .OrderByDescending(c => c.Title);
 
         var conversations = await conversationRepository.Search(spec, CancellationToken.None);
 

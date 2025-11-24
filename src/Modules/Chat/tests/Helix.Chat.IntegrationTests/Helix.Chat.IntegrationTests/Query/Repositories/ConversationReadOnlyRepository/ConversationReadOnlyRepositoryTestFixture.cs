@@ -105,7 +105,7 @@ public class ConversationReadOnlyRepositoryTestFixture
     public List<ConversationQueryModel> FilterOrderAndPaginate(
         List<ConversationQueryModel> source,
         Func<ConversationQueryModel, bool>? predicate = null,
-        string orderBy = "createdAt",
+        string orderBy = "title",
         SearchOrder order = SearchOrder.Desc,
         int page = 1,
         int perPage = 10)
@@ -139,38 +139,28 @@ public class ConversationReadOnlyRepositoryTestFixture
         };
     }
 
-    private static readonly Dictionary<string, Expression<Func<ConversationQueryModel, object>>> _orderSelectors
-        = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["title"] = c => c.Title,
-            ["createdAt"] = c => c.CreatedAt,
-            ["updatedAt"] = c => c.UpdatedAt
-        };
-
     public QuerySpecification<ConversationQueryModel> BuildSpecificationForParticipant(
         Guid participantId,
-        string? orderBy,
-        SearchOrder sortDirection,
-        int page,
-        int perPage)
+        string orderBy = "title",
+        SearchOrder sortDirection = SearchOrder.Desc,
+        int page = 1,
+        int perPage = 10)
     {
         var spec = new QuerySpecification<ConversationQueryModel>()
             .Where(c => c.ParticipantIds.Contains(participantId))
             .PageSize(page, perPage);
 
-        var sortField = string.IsNullOrWhiteSpace(orderBy)
-            ? "title"
-            : orderBy.Trim();
-
-        if (!_orderSelectors.TryGetValue(sortField, out var selector))
+        var orderKey = orderBy?.Trim().ToLowerInvariant() ?? "title";
+        spec = (orderKey, sortDirection) switch
         {
-            selector = _orderSelectors["title"];
-        }
-
-        if (sortDirection == SearchOrder.Asc)
-            spec.OrderBy(selector);
-        else
-            spec.OrderByDescending(selector);
+            ("title", SearchOrder.Asc) => spec.OrderBy(c => c.Title),
+            ("title", SearchOrder.Desc) => spec.OrderByDescending(c => c.Title),
+            ("createdat", SearchOrder.Asc) => spec.OrderBy(c => c.CreatedAt),
+            ("createdat", SearchOrder.Desc) => spec.OrderByDescending(c => c.CreatedAt),
+            ("updatedat", SearchOrder.Asc) => spec.OrderBy(c => c.UpdatedAt),
+            ("updatedat", SearchOrder.Desc) => spec.OrderByDescending(c => c.UpdatedAt),
+            _ => spec.OrderBy(c => c.Title)
+        };
 
         return spec;
     }
