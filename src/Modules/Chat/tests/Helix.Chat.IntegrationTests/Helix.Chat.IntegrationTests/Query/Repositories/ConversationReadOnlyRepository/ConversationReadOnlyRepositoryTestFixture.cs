@@ -150,7 +150,7 @@ public class ConversationReadOnlyRepositoryTestFixture
             .Where(c => c.ParticipantIds.Contains(participantId))
             .PageSize(page, perPage);
 
-        var orderKey = orderBy?.Trim().ToLowerInvariant() ?? "title";
+        var orderKey = orderBy.Trim().ToLowerInvariant();
         spec = (orderKey, sortDirection) switch
         {
             ("title", SearchOrder.Asc) => spec.OrderBy(c => c.Title),
