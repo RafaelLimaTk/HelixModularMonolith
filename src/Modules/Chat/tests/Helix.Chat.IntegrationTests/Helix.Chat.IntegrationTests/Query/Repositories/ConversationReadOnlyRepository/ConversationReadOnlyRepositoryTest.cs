@@ -293,4 +293,25 @@ public class ConversationReadOnlyRepositoryTest(ConversationReadOnlyRepositoryTe
             conversation.UpdatedAt.Should().BeCloseTo(expectedConversation.UpdatedAt, TimeSpan.FromSeconds(1));
         });
     }
+
+    [Fact(DisplayName = nameof(SearchBySpecReturnsEmptyWhenEmpty))]
+    [Trait("Chat/Integration/Infra.Data", "ConversationReadOnlyRepository - Repositories")]
+    public async Task SearchBySpecReturnsEmptyWhenEmpty()
+    {
+        IChatReadDbContext dbContext = _fixture.CreateReadDbContext();
+        var conversationRepository =
+            new RepositoryRead.ConversationsReadOnlyRepository(dbContext);
+        var spec = new QuerySpecification<ConversationQueryModel>()
+            .Where(c => c.ParticipantIds.Contains(Guid.NewGuid()))
+            .PageSize(1, 5)
+            .OrderByDescending(c => c.CreatedAt);
+
+        var conversations = await conversationRepository.Search(spec, CancellationToken.None);
+
+        conversations.Should().NotBeNull();
+        conversations.CurrentPage.Should().Be(spec.Page);
+        conversations.PerPage.Should().Be(spec.PerPage);
+        conversations.Total.Should().Be(0);
+        conversations.Items.Should().HaveCount(0);
+    }
 }
