@@ -2,6 +2,7 @@
 global using FluentAssertions;
 global using Helix.Chat.Domain.Entities;
 global using Helix.Chat.Infra.Data.EF;
+global using Helix.Chat.IntegrationTests.Application.UseCases.Conversation.Common;
 global using Helix.Chat.IntegrationTests.Base;
 global using Helix.Chat.IntegrationTests.Infra.Data.EF.Common;
 global using Helix.Chat.IntegrationTests.Query.Base;
@@ -9,6 +10,7 @@ global using Helix.Chat.Query.Data;
 global using Helix.Chat.Query.Data.Context;
 global using Helix.Chat.Query.Models;
 global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Logging;
 global using MongoDB.Driver;
 global using Moq;
 global using Shared.Application.Exceptions;

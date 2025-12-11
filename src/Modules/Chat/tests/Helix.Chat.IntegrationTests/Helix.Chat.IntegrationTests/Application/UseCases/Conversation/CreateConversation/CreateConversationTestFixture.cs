@@ -1,6 +1,4 @@
-﻿using Helix.Chat.IntegrationTests.Application.UseCases.Conversation.Common;
-
-namespace Helix.Chat.IntegrationTests.Application.UseCases.Conversation.CreateConversation;
+﻿namespace Helix.Chat.IntegrationTests.Application.UseCases.Conversation.CreateConversation;
 
 [CollectionDefinition(nameof(CreateConversationTestFixture))]
 public class CreateConversationTestFixtureCollection
