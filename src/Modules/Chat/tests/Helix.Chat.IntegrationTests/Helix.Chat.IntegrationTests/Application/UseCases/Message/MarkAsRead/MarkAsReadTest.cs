@@ -56,4 +56,51 @@ public class MarkAsReadTest(MarkAsReadTestFixture fixture)
         dbMessage.ReadAt.Should().NotBeNull();
         dbMessage.ReadAt!.Value.Should().BeCloseTo(output.ReadAt, TimeSpan.FromSeconds(1));
     }
+
+    [Fact(DisplayName = nameof(MarkAsReadRaisesMessageReadEvent))]
+    [Trait("Chat/Integration/Application", "MarkAsRead - Use Cases")]
+    public async Task MarkAsReadRaisesMessageReadEvent()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var senderId = Guid.NewGuid();
+        var readerId = Guid.NewGuid();
+        var conversation = _fixture.GetExampleConversation(
+            participantIds: [senderId, readerId]
+        );
+        var message = conversation.SendMessage(senderId, _fixture.GetValidContent());
+        message.MarkAsDelivered();
+        await conversationRepository.Insert(conversation, CancellationToken.None);
+        await messageRepository.Insert(message, CancellationToken.None);
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.MarkAsRead(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+        var input = new UseCase.MarkAsReadInput(
+            message.Id,
+            readerId
+        );
+
+        var output = await useCase.Handle(input, CancellationToken.None);
+
+        output.Should().NotBeNull();
+        output.Changed.Should().BeTrue();
+        outboxStoreMock.Verify(x => x.AppendAsync(
+            It.Is<EventEnvelope>(e =>
+                e.EventName == "MessageRead" &&
+                e.ClrType.Contains("MessageRead") &&
+                !string.IsNullOrWhiteSpace(e.Payload)),
+            It.IsAny<CancellationToken>()
+        ), Times.Once);
+    }
 }
