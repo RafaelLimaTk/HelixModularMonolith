@@ -3,6 +3,7 @@ global using FluentAssertions;
 global using Helix.Chat.Domain.Entities;
 global using Helix.Chat.Infra.Data.EF;
 global using Helix.Chat.IntegrationTests.Application.UseCases.Conversation.Common;
+global using Helix.Chat.IntegrationTests.Application.UseCases.Message.Common;
 global using Helix.Chat.IntegrationTests.Base;
 global using Helix.Chat.IntegrationTests.Infra.Data.EF.Common;
 global using Helix.Chat.IntegrationTests.Query.Base;
