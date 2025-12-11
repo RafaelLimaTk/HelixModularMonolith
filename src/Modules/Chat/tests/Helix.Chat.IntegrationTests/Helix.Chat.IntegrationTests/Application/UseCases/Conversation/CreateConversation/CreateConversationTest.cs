@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Shared.Domain.Exceptions;
 using UseCase = Helix.Chat.Application.UseCases.Conversation.CreateConversation;
 
 namespace Helix.Chat.IntegrationTests.Application.UseCases.Conversation.CreateConversation;
@@ -74,5 +75,102 @@ public class CreateConversationTest(CreateConversationTestFixture fixture)
                 !string.IsNullOrWhiteSpace(e.Payload)),
             It.IsAny<CancellationToken>()
         ), Times.Once);
+    }
+
+    [Fact(DisplayName = nameof(ThrowWhenTitleIsEmpty))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    public async Task ThrowWhenTitleIsEmpty()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var input = new UseCase.CreateConversationInput(
+            string.Empty
+        );
+
+        var action = async () => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage("Title should not be null or empty");
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var conversationsCount = await assertDbContext.Conversations.CountAsync();
+        conversationsCount.Should().Be(0);
+    }
+
+    [Theory(DisplayName = nameof(ThrowWhenTitleIsLessThan3Characters))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    [InlineData("a")]
+    [InlineData("ab")]
+    public async Task ThrowWhenTitleIsLessThan3Characters(string invalidTitle)
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var input = new UseCase.CreateConversationInput(
+            invalidTitle
+        );
+
+        var action = async () => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage("Title should be at least 3 characters long");
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var conversationsCount = await assertDbContext.Conversations.CountAsync();
+        conversationsCount.Should().Be(0);
+    }
+
+    [Theory(DisplayName = nameof(ThrowWhenTitleIsGreaterThanMaxLength))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    [InlineData(1)]
+    [InlineData(10)]
+    [InlineData(50)]
+    public async Task ThrowWhenTitleIsGreaterThanMaxLength(int excess)
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var maxLength = DomainEntity.Conversation.MAX_LENGTH;
+        var invalidTitle = _fixture.GetLongTitle(maxLength + excess);
+        var input = new UseCase.CreateConversationInput(
+            invalidTitle
+        );
+
+        var action = async () => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EntityValidationException>()
+            .WithMessage($"Title should be at most {maxLength} characters long");
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var conversationsCount = await assertDbContext.Conversations.CountAsync();
+        conversationsCount.Should().Be(0);
     }
 }

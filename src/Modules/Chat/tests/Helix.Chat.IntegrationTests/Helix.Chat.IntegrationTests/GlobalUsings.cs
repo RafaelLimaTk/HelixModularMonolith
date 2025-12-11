@@ -18,7 +18,7 @@ global using Shared.Infra.Outbox.Models;
 global using Shared.Query.Interfaces;
 global using Shared.Query.Interfaces.SearchableRepository;
 global using Shared.Query.Specifications;
-global using System.Linq.Expressions;
 global using Xunit;
+global using DomainEntity = Helix.Chat.Domain.Entities;
 global using Repository = Helix.Chat.Infra.Data.EF.Repositories;
 global using RepositoryRead = Helix.Chat.Query.Data.Repositories;
