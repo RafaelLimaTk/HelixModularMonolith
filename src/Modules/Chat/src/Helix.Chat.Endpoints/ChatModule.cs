@@ -6,8 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Endpoints.Extensions;
+using Shared.Infra.Outbox;
+using Shared.Infra.Outbox.Interfaces;
 
 namespace Helix.Chat.Endpoints;
+
 public static class ChatModule
 {
     public static IServiceCollection AddChatModule(this IServiceCollection services,
@@ -24,7 +27,8 @@ public static class ChatModule
                 .UseSnakeCaseNamingConvention()
         );
 
-        services.Configure<MongoSettings>(options => configuration.GetSection("Mongo:Chat").Bind(options));
+        services.Configure<MongoSettings>(options =>
+            configuration.GetSection("Mongo:Chat").Bind(options));
 
         services.AddMediatRWithAssemblies(ChatAssemblies.All);
         services.AddDomainEventsWithAssemblies(ChatAssemblies.All);
@@ -32,6 +36,20 @@ public static class ChatModule
 
         services.AddChatQueryRegister();
         services.AddChatInfraRegister();
+
+        services.AddOutboxProcessor(configuration, options =>
+        {
+            options.BatchSize = 50;
+            options.EnableParallelProcessing = true;
+        });
+
+        var typeResolver = services.BuildServiceProvider()
+            .GetRequiredService<ITypeResolver>();
+
+        foreach (var assembly in ChatAssemblies.All)
+        {
+            typeResolver.RegisterAssembly(assembly);
+        }
 
         return services;
     }

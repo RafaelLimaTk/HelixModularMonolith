@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Shared.Infra.Outbox.Interfaces;
+﻿using Shared.Infra.Outbox.Interfaces;
 
 namespace Helix.Chat.Infra.Data.EF;
 
