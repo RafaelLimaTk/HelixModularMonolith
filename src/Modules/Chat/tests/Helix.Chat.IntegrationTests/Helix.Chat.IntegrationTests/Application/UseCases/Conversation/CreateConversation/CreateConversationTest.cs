@@ -240,4 +240,47 @@ public class CreateConversationTest(CreateConversationTestFixture fixture)
         dbConversation.Title.Should().NotStartWith(" ");
         dbConversation.Title.Should().NotEndWith(" ");
     }
+
+    [Fact(DisplayName = nameof(CreateMultipleConversations))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    public async Task CreateMultipleConversations()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var titles = Enumerable.Range(0, 5)
+            .Select(_ => _fixture.GetValidTitle())
+            .ToList();
+
+        var outputs = new List<UseCase.CreateConversationOutput>();
+
+        foreach (var title in titles)
+        {
+            var input = new UseCase.CreateConversationInput(title);
+            var output = await useCase.Handle(input, CancellationToken.None);
+            outputs.Add(output);
+        }
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var conversationsCount = await assertDbContext.Conversations.CountAsync();
+        conversationsCount.Should().Be(5);
+        var dbConversations = await assertDbContext.Conversations
+            .AsNoTracking()
+            .ToListAsync();
+        dbConversations.Should().HaveCount(5);
+        foreach (var output in outputs)
+        {
+            var dbConversation = dbConversations.FirstOrDefault(c => c.Id == output.Id);
+            dbConversation.Should().NotBeNull();
+        }
+    }
 }
