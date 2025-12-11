@@ -173,4 +173,71 @@ public class CreateConversationTest(CreateConversationTestFixture fixture)
         var conversationsCount = await assertDbContext.Conversations.CountAsync();
         conversationsCount.Should().Be(0);
     }
+
+    [Fact(DisplayName = nameof(CreateConversationWithTitleEqualToMaxLength))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    public async Task CreateConversationWithTitleEqualToMaxLength()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var maxLength = DomainEntity.Conversation.MAX_LENGTH;
+        var title = _fixture.GetShortTitle(maxLength);
+        var input = new UseCase.CreateConversationInput(title);
+
+        var output = await useCase.Handle(input, CancellationToken.None);
+
+        output.Should().NotBeNull();
+        output.Id.Should().NotBeEmpty();
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbConversation = await assertDbContext.Conversations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == output.Id);
+        dbConversation.Should().NotBeNull();
+        dbConversation!.Title.Should().Be(title);
+        dbConversation.Title.Length.Should().Be(maxLength);
+    }
+
+    [Fact(DisplayName = nameof(CreateConversationTrimsTitle))]
+    [Trait("Chat/Integration/Application", "CreateConversation - Use Cases")]
+    public async Task CreateConversationTrimsTitle()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.CreateConversation(
+            repository,
+            unitOfWork
+        );
+        var titleWithSpaces = $"  {_fixture.GetValidTitle()}  ";
+        var expectedTitle = titleWithSpaces.Trim();
+        var input = new UseCase.CreateConversationInput(
+            titleWithSpaces
+        );
+
+        var output = await useCase.Handle(input, CancellationToken.None);
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbConversation = await assertDbContext.Conversations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == output.Id);
+        dbConversation.Should().NotBeNull();
+        dbConversation!.Title.Should().Be(expectedTitle);
+        dbConversation.Title.Should().NotStartWith(" ");
+        dbConversation.Title.Should().NotEndWith(" ");
+    }
 }
