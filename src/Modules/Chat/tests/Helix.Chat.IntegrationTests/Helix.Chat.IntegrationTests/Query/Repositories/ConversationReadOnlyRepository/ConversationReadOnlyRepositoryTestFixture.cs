@@ -129,12 +129,18 @@ public class ConversationReadOnlyRepositoryTestFixture
         var orderKey = orderBy.Trim().ToLowerInvariant();
         return (orderKey, dir) switch
         {
-            ("title", SearchOrder.Asc) => source.OrderBy(c => c.Title).ThenBy(c => c.Id),
-            ("title", SearchOrder.Desc) => source.OrderByDescending(c => c.Title).ThenByDescending(c => c.Id),
-            ("createdat", SearchOrder.Asc) => source.OrderBy(c => c.CreatedAt).ThenBy(c => c.Title),
-            ("createdat", SearchOrder.Desc) => source.OrderByDescending(c => c.CreatedAt).ThenByDescending(c => c.Title),
-            ("updatedat", SearchOrder.Asc) => source.OrderBy(c => c.UpdatedAt).ThenBy(c => c.Title),
-            ("updatedat", SearchOrder.Desc) => source.OrderByDescending(c => c.UpdatedAt).ThenByDescending(c => c.Title),
+            ("title", SearchOrder.Asc) => source.OrderBy(c => c.Title)
+                .ThenBy(c => c.Id),
+            ("title", SearchOrder.Desc) => source.OrderByDescending(c => c.Title)
+                .ThenByDescending(c => c.Id),
+            ("createdat", SearchOrder.Asc) => source.OrderBy(c => c.CreatedAt)
+                .ThenBy(c => c.Title),
+            ("createdat", SearchOrder.Desc) => source.OrderByDescending(c => c.CreatedAt)
+                .ThenByDescending(c => c.Title),
+            ("updatedat", SearchOrder.Asc) => source.OrderBy(c => c.UpdatedAt)
+                .ThenBy(c => c.Title),
+            ("updatedat", SearchOrder.Desc) => source.OrderByDescending(c => c.UpdatedAt)
+                .ThenByDescending(c => c.Title),
             _ => source.OrderBy(c => c.Title).ThenBy(c => c.Id),
         };
     }
@@ -153,8 +159,10 @@ public class ConversationReadOnlyRepositoryTestFixture
         var orderKey = orderBy.Trim().ToLowerInvariant();
         spec = (orderKey, sortDirection) switch
         {
-            ("title", SearchOrder.Asc) => spec.OrderBy(c => c.Title),
-            ("title", SearchOrder.Desc) => spec.OrderByDescending(c => c.Title),
+            ("title", SearchOrder.Asc) => spec.OrderBy(c => c.Title)
+                .ThenBy(c => c.Id),
+            ("title", SearchOrder.Desc) => spec.OrderByDescending(c => c.Title)
+                .ThenByDescending(c => c.Id),
             ("createdat", SearchOrder.Asc) => spec.OrderBy(c => c.CreatedAt),
             ("createdat", SearchOrder.Desc) => spec.OrderByDescending(c => c.CreatedAt),
             ("updatedat", SearchOrder.Asc) => spec.OrderBy(c => c.UpdatedAt),

@@ -80,17 +80,17 @@ public sealed class ConversationsReadOnlyRepository(IChatReadDbContext ctx)
         return sort.ToLowerInvariant() switch
         {
             "title" => desc
-                ? sb.Descending(x => x.Title).Descending(x => x.Id)
-                : sb.Ascending(x => x.Title).Ascending(x => x.Id),
+                ? sb.Combine(sb.Descending(x => x.Title), sb.Descending(x => x.Id))
+                : sb.Combine(sb.Ascending(x => x.Title), sb.Ascending(x => x.Id)),
             "createdat" => desc
-                ? sb.Descending(x => x.CreatedAt)
-                : sb.Ascending(x => x.CreatedAt),
+                ? sb.Combine(sb.Descending(x => x.CreatedAt), sb.Descending(x => x.Title))
+                : sb.Combine(sb.Ascending(x => x.CreatedAt), sb.Ascending(x => x.Title)),
             "updatedat" => desc
-                ? sb.Descending(x => x.UpdatedAt)
-                : sb.Ascending(x => x.UpdatedAt),
+                ? sb.Combine(sb.Descending(x => x.UpdatedAt), sb.Descending(x => x.Title))
+                : sb.Combine(sb.Ascending(x => x.UpdatedAt), sb.Ascending(x => x.Title)),
             _ => desc
-                ? sb.Descending(x => x.Title).Descending(x => x.Id)
-                : sb.Ascending(x => x.Title).Ascending(x => x.Id),
+                ? sb.Combine(sb.Descending(x => x.Title), sb.Descending(x => x.Id))
+                : sb.Combine(sb.Ascending(x => x.Title), sb.Ascending(x => x.Id)),
         };
     }
 }

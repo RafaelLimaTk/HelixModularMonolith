@@ -3,7 +3,7 @@ using MongoDB.Bson;
 
 namespace Helix.Chat.Query.Data.Repositories;
 
-internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessagesReadRepository
+public sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessagesReadRepository
 {
     private readonly IMongoCollection<MessageQueryModel> _messages
         = ctx.GetCollection<MessageQueryModel>(CollectionNames.Messages);
@@ -87,10 +87,18 @@ internal sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMess
 
         return s.ToLowerInvariant() switch
         {
-            "sentat" => desc ? sb.Descending(x => x.SentAt) : sb.Ascending(x => x.SentAt),
-            "deliveredat" => desc ? sb.Descending(x => x.DeliveredAt) : sb.Ascending(x => x.DeliveredAt),
-            "readat" => desc ? sb.Descending(x => x.ReadAt) : sb.Ascending(x => x.ReadAt),
-            _ => desc ? sb.Descending(x => x.SentAt) : sb.Ascending(x => x.SentAt),
+            "sentat" => desc
+                ? sb.Combine(sb.Descending(x => x.SentAt), sb.Descending(x => x.Id))
+                : sb.Combine(sb.Ascending(x => x.SentAt), sb.Ascending(x => x.Id)),
+            "deliveredat" => desc
+                ? sb.Combine(sb.Descending(x => x.DeliveredAt), sb.Descending(x => x.SentAt))
+                : sb.Combine(sb.Ascending(x => x.DeliveredAt), sb.Ascending(x => x.SentAt)),
+            "readat" => desc
+                ? sb.Combine(sb.Descending(x => x.ReadAt), sb.Descending(x => x.SentAt))
+                : sb.Combine(sb.Ascending(x => x.ReadAt), sb.Ascending(x => x.SentAt)),
+            _ => desc
+                ? sb.Combine(sb.Descending(x => x.SentAt), sb.Descending(x => x.Id))
+                : sb.Combine(sb.Ascending(x => x.SentAt), sb.Ascending(x => x.Id)),
         };
     }
 }

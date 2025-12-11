@@ -30,6 +30,18 @@ public class QuerySpecification<TModel> : IQuerySpecification<TModel>
         return this;
     }
 
+    public QuerySpecification<TModel> ThenBy(Expression<Func<TModel, object>> key)
+    {
+        _orders.Add(new(key, false));
+        return this;
+    }
+
+    public QuerySpecification<TModel> ThenByDescending(Expression<Func<TModel, object>> key)
+    {
+        _orders.Add(new(key, true));
+        return this;
+    }
+
     public QuerySpecification<TModel> PageSize(int page, int perPage)
     {
         Page = page <= 0 ? 1 : page;
