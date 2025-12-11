@@ -50,4 +50,42 @@ public class AddParticipantTest(AddParticipantTestFixture fixture)
         dbConversation.Participants.First().UserId.Should().Be(userId);
         dbConversation.Participants.First().JoinedAt.Should().BeCloseTo(output.JoinedAt, TimeSpan.FromSeconds(1));
     }
+
+    [Fact(DisplayName = nameof(AddParticipantRaisesParticipantAddedEvent))]
+    [Trait("Chat/Integration/Application", "AddParticipant - Use Cases")]
+    public async Task AddParticipantRaisesParticipantAddedEvent()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var repository = new Repository.ConversationRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var conversation = _fixture.GetExampleConversation();
+        await repository.Insert(conversation, CancellationToken.None);
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.AddParticipant(
+            repository,
+            unitOfWork
+        );
+        var userId = Guid.NewGuid();
+        var input = new UseCase.AddParticipantInput(
+            conversation.Id,
+            userId
+        );
+
+        var output = await useCase.Handle(input, CancellationToken.None);
+
+        output.Should().NotBeNull();
+        outboxStoreMock.Verify(x => x.AppendAsync(
+            It.Is<EventEnvelope>(e =>
+                e.EventName == "ParticipantAdded" &&
+                e.ClrType.Contains("ParticipantAdded") &&
+                !string.IsNullOrWhiteSpace(e.Payload)),
+            It.IsAny<CancellationToken>()
+        ), Times.Once);
+    }
 }
