@@ -149,4 +149,138 @@ public class MarkAsDeliveredTest(MarkAsDeliveredTestFixture fixture)
             .FirstAsync(m => m.Id == message.Id);
         dbMessage.Status.Should().Be(MessageStatus.Delivered);
     }
+
+    [Fact(DisplayName = nameof(DoesNotChangeWhenAlreadyRead))]
+    [Trait("Chat/Integration/Application", "MarkAsDelivered - Use Cases")]
+    public async Task DoesNotChangeWhenAlreadyRead()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var senderId = Guid.NewGuid();
+        var conversation = _fixture.GetExampleConversation(
+            participantIds: new List<Guid> { senderId }
+        );
+        var message = conversation.SendMessage(senderId, _fixture.GetValidContent());
+        message.MarkAsDelivered();
+        message.MarkAsRead();
+        await conversationRepository.Insert(conversation, CancellationToken.None);
+        await messageRepository.Insert(message, CancellationToken.None);
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.MarkAsDelivered(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+        var input = new UseCase.MarkAsDeliveredInput(
+            message.Id
+        );
+
+        var output = await useCase.Handle(input, CancellationToken.None);
+
+        output.Should().NotBeNull();
+        output.MessageId.Should().Be(message.Id);
+        output.Changed.Should().BeFalse();
+        output.DeliveredAt.Should().Be(message.DeliveredAt);
+        outboxStoreMock.Verify(x => x.AppendAsync(
+            It.IsAny<EventEnvelope>(),
+            It.IsAny<CancellationToken>()
+        ), Times.Never);
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbMessage = await assertDbContext.Messages
+            .AsNoTracking()
+            .FirstAsync(m => m.Id == message.Id);
+        dbMessage.Status.Should().Be(MessageStatus.Read);
+        dbMessage.DeliveredAt.Should().NotBeNull();
+        dbMessage.ReadAt.Should().NotBeNull();
+    }
+
+    [Fact(DisplayName = nameof(ThrowWhenMessageNotFound))]
+    [Trait("Chat/Integration/Application", "MarkAsDelivered - Use Cases")]
+    public async Task ThrowWhenMessageNotFound()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var useCase = new UseCase.MarkAsDelivered(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+        var nonExistentId = Guid.NewGuid();
+        var input = new UseCase.MarkAsDeliveredInput(
+            nonExistentId
+        );
+
+        var action = async () => await useCase.Handle(input, CancellationToken.None);
+
+        await action.Should().ThrowAsync<NotFoundException>()
+            .WithMessage($"Message '{nonExistentId}' not found.");
+    }
+
+    [Fact(DisplayName = nameof(MarkMultipleMessagesAsDelivered))]
+    [Trait("Chat/Integration/Application", "MarkAsDelivered - Use Cases")]
+    public async Task MarkMultipleMessagesAsDelivered()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var senderId = Guid.NewGuid();
+        var conversation = _fixture.GetExampleConversation(
+            participantIds: [senderId]
+        );
+        var messages = Enumerable.Range(0, 5)
+            .Select(_ => conversation.SendMessage(senderId, _fixture.GetValidContent()))
+            .ToList();
+        await conversationRepository.Insert(conversation, CancellationToken.None);
+        foreach (var message in messages)
+        {
+            await messageRepository.Insert(message, CancellationToken.None);
+        }
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.MarkAsDelivered(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+
+        foreach (var message in messages)
+        {
+            var input = new UseCase.MarkAsDeliveredInput(
+                message.Id
+            );
+            var output = await useCase.Handle(input, CancellationToken.None);
+            output.Changed.Should().BeTrue();
+        }
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbMessages = await assertDbContext.Messages
+            .AsNoTracking()
+            .Where(m => messages.Select(msg => msg.Id).Contains(m.Id))
+            .ToListAsync();
+        dbMessages.Should().HaveCount(5);
+        dbMessages.Should().OnlyContain(m => m.Status == Domain.Enums.MessageStatus.Delivered);
+        dbMessages.Should().OnlyContain(m => m.DeliveredAt != null);
+        dbMessages.Should().OnlyContain(m => m.ReadAt == null);
+    }
 }
