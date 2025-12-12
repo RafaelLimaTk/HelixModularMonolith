@@ -95,6 +95,6 @@ public class ConversationUseCasesBaseFixture : BaseFixture
                 result = string.Concat(result, " ", extra);
         }
 
-        return result;
+        return result.Trim();
     }
 }
