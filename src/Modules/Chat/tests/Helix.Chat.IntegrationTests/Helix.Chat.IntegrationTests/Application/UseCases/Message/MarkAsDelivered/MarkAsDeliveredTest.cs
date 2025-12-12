@@ -279,8 +279,113 @@ public class MarkAsDeliveredTest(MarkAsDeliveredTestFixture fixture)
             .Where(m => messages.Select(msg => msg.Id).Contains(m.Id))
             .ToListAsync();
         dbMessages.Should().HaveCount(5);
-        dbMessages.Should().OnlyContain(m => m.Status == Domain.Enums.MessageStatus.Delivered);
+        dbMessages.Should().OnlyContain(m => m.Status == MessageStatus.Delivered);
         dbMessages.Should().OnlyContain(m => m.DeliveredAt != null);
         dbMessages.Should().OnlyContain(m => m.ReadAt == null);
+    }
+
+    [Fact(DisplayName = nameof(PreservesOriginalMessageData))]
+    [Trait("Chat/Integration/Application", "MarkAsDelivered - Use Cases")]
+    public async Task PreservesOriginalMessageData()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var senderId = Guid.NewGuid();
+        var content = _fixture.GetValidContent();
+        var conversation = _fixture.GetExampleConversation(
+            participantIds: new List<Guid> { senderId }
+        );
+        var message = conversation.SendMessage(senderId, content);
+        var originalSentAt = message.SentAt;
+        await conversationRepository.Insert(conversation, CancellationToken.None);
+        await messageRepository.Insert(message, CancellationToken.None);
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.MarkAsDelivered(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+        var input = new UseCase.MarkAsDeliveredInput(
+            message.Id
+        );
+
+        await useCase.Handle(input, CancellationToken.None);
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbMessage = await assertDbContext.Messages
+            .AsNoTracking()
+            .FirstAsync(m => m.Id == message.Id);
+        dbMessage.ConversationId.Should().Be(conversation.Id);
+        dbMessage.SenderId.Should().Be(senderId);
+        dbMessage.Content.Should().Be(content);
+        dbMessage.SentAt.Should().BeCloseTo(originalSentAt, TimeSpan.FromSeconds(1));
+        dbMessage.Status.Should().Be(MessageStatus.Delivered);
+        dbMessage.DeliveredAt.Should().NotBeNull();
+        dbMessage.ReadAt.Should().BeNull();
+    }
+
+    [Fact(DisplayName = nameof(MultipleConversationsMarkMessagesIndependently))]
+    [Trait("Chat/Integration/Application", "MarkAsDelivered - Use Cases")]
+    public async Task MultipleConversationsMarkMessagesIndependently()
+    {
+        var dbContext = _fixture.CreateDbContext();
+        var conversationRepository = new Repository.ConversationRepository(dbContext);
+        var messageRepository = new Repository.MessageRepository(dbContext);
+        var outboxStoreMock = new Mock<IOutboxStore>();
+        var unitOfWork = new UnitOfWork(
+            dbContext,
+            outboxStoreMock.Object,
+            new Mock<ILogger<UnitOfWork>>().Object
+        );
+        var conversations = Enumerable.Range(0, 3)
+            .Select(_ =>
+            {
+                var senderId = Guid.NewGuid();
+                var conv = _fixture.GetExampleConversation(participantIds: [senderId]);
+                return (Conversation: conv, SenderId: senderId);
+            })
+            .ToList();
+        var messages = new List<DomainEntity.Message>();
+        foreach (var (conv, senderId) in conversations)
+        {
+            var message = conv.SendMessage(senderId, _fixture.GetValidContent());
+            messages.Add(message);
+            await conversationRepository.Insert(conv, CancellationToken.None);
+            await messageRepository.Insert(message, CancellationToken.None);
+        }
+        await unitOfWork.Commit(CancellationToken.None);
+        outboxStoreMock.Reset();
+        var useCase = new UseCase.MarkAsDelivered(
+            messageRepository,
+            conversationRepository,
+            unitOfWork
+        );
+
+        foreach (var message in messages)
+        {
+            var input = new UseCase.MarkAsDeliveredInput(
+                message.Id
+            );
+            var output = await useCase.Handle(input, CancellationToken.None);
+            output.Changed.Should().BeTrue();
+        }
+
+        var assertDbContext = _fixture.CreateDbContext(true);
+        var dbMessages = await assertDbContext.Messages
+            .AsNoTracking()
+            .Where(m => messages.Select(msg => msg.Id).Contains(m.Id))
+            .ToListAsync();
+        dbMessages.Should().HaveCount(3);
+        dbMessages.Should().OnlyContain(m => m.Status == MessageStatus.Delivered);
+        var conversationIds = dbMessages.Select(m => m.ConversationId).Distinct().ToList();
+        conversationIds.Should().HaveCount(3);
     }
 }
