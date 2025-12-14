@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 namespace Helix.Chat.Query.Application.UseCases.Conversation.ListMessagesByConversation;
+
 public sealed class ListMessagesByConversationSpecification
     : IQuerySpecification<MessageQueryModel>
 {
@@ -22,26 +23,50 @@ public sealed class ListMessagesByConversationSpecification
         var hasTerm = term.Length > 0;
 
         Criteria = m =>
-            m.ConversationId == conversationId &&
-            (!hasTerm || m.Content.Contains(term, StringComparison.InvariantCultureIgnoreCase));
+             m.ConversationId == conversationId &&
+             (!hasTerm || m.Content.ToLowerInvariant().Contains(term));
 
-        var key = MapSort(sort);
-        Orders = [new OrderExpression<MessageQueryModel>(key, dir == SearchOrder.Desc)];
+        var orders = MapSortWithTieBreaker(sort, dir);
+        Orders = orders;
 
         Page = page <= 0 ? 1 : page;
         PerPage = perPage <= 0 ? 20 : Math.Min(perPage, 100);
     }
 
-    static Expression<Func<MessageQueryModel, object>> MapSort(string sort)
+    static List<OrderExpression<MessageQueryModel>> MapSortWithTieBreaker(
+        string sort,
+        SearchOrder dir)
     {
-        var s = string.IsNullOrWhiteSpace(sort) ? "sentAt" : sort;
-        switch (s.Trim().ToLowerInvariant())
+        var s = string.IsNullOrWhiteSpace(sort) ? "sentAt" : sort.Trim().ToLowerInvariant();
+        var desc = dir == SearchOrder.Desc;
+
+        return s switch
         {
-            case "status": return x => x.Status;
-            case "readat": return x => x.ReadAt!;
-            case "deliveredat": return x => x.DeliveredAt!;
-            case "sentat": return x => x.SentAt;
-            default: return x => x.SentAt;
-        }
+            "status" =>
+            [
+                new(x => x.Status, desc),
+                new(x => x.Id, desc)
+            ],
+            "deliveredat" =>
+            [
+                new(x => x.DeliveredAt!, desc),
+                new(x => x.SentAt, desc)
+            ],
+            "readat" =>
+            [
+                new(x => x.ReadAt!, desc),
+                new(x => x.SentAt, desc)
+            ],
+            "sentat" =>
+            [
+                new(x => x.SentAt, desc),
+                new(x => x.Id, desc)
+            ],
+            _ =>
+            [
+                new(x => x.SentAt, desc),
+                new(x => x.Id, desc)
+            ]
+        };
     }
 }

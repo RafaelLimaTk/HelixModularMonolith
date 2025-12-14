@@ -87,6 +87,9 @@ public sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessag
 
         return s.ToLowerInvariant() switch
         {
+            "status" => desc
+                ? sb.Combine(sb.Descending(x => x.Status), sb.Descending(x => x.Id))
+                : sb.Combine(sb.Ascending(x => x.Status), sb.Ascending(x => x.Id)),
             "sentat" => desc
                 ? sb.Combine(sb.Descending(x => x.SentAt), sb.Descending(x => x.Id))
                 : sb.Combine(sb.Ascending(x => x.SentAt), sb.Ascending(x => x.Id)),
