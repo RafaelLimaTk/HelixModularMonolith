@@ -145,16 +145,16 @@ public class ConversationCreatedProjectionTest(ConversationProjectionTestFixture
         savedConversation.ParticipantIds.Should().BeEquivalentTo(existingParticipants);
     }
 
-    [Fact(DisplayName = nameof(ProjectConversationCreated_SetsAllRequiredFields))]
+    [Fact(DisplayName = nameof(SetsAllRequiredFields))]
     [Trait("Chat/Integration/Query/Projections", "ConversationCreated - Projection")]
-    public async Task ProjectConversationCreated_SetsAllRequiredFields()
+    public async Task SetsAllRequiredFields()
     {
         var dbContext = _fixture.CreateReadDbContext();
         var sync = _fixture.CreateSynchronizeDb(preserveData: true);
         var projection = new ConversationCreatedProjection(sync);
         var conversationId = Guid.NewGuid();
         var title = _fixture.GetValidTitle();
-        var createdAt = new DateTime();
+        var createdAt = DateTime.UtcNow;
         var conversationCreated = new ConversationCreated(conversationId, title, createdAt);
 
         await projection.ProjectAsync(conversationCreated, CancellationToken.None);
