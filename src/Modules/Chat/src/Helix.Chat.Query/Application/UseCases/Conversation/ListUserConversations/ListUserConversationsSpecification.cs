@@ -18,30 +18,46 @@ public sealed class ListUserConversationsSpecification : IQuerySpecification<Con
         string sort = "",
         SearchOrder dir = SearchOrder.Desc)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var hasTerm = !string.IsNullOrEmpty(normalizedSearch);
-        var termLower = normalizedSearch.ToLowerInvariant();
+        var term = (search ?? string.Empty).Trim().ToLowerInvariant();
+        var hasTerm = term.Length > 0;
 
         Criteria = c =>
             c.ParticipantIds.Contains(userId) &&
-            (!hasTerm || c.Title.Contains(termLower));
+            (!hasTerm || c.Title.ToLowerInvariant().Contains(term));
 
-        var keySelector = MapSort(sort);
-        Orders = [new OrderExpression<ConversationQueryModel>(keySelector, dir == SearchOrder.Desc)];
+        var orders = MapSortWithTieBreaker(sort, dir);
+        Orders = orders;
 
         Page = page <= 0 ? 1 : page;
         PerPage = perPage <= 0 ? 20 : Math.Min(perPage, 100);
     }
 
-    static Expression<Func<ConversationQueryModel, object>> MapSort(string sort)
+    static List<OrderExpression<ConversationQueryModel>> MapSortWithTieBreaker(
+        string sort,
+        SearchOrder dir)
     {
-        var s = string.IsNullOrWhiteSpace(sort) ? "updatedAt" : sort;
-        switch (s.Trim().ToLowerInvariant())
+        var normalizedSort = string.IsNullOrWhiteSpace(sort) ? "updatedAt" : sort.Trim().ToLowerInvariant();
+        var desc = dir == SearchOrder.Desc;
+
+        return normalizedSort switch
         {
-            case "title": return x => x.Title;
-            case "createdat": return x => x.CreatedAt;
-            case "updatedat": return x => x.UpdatedAt;
-            default: return x => x.UpdatedAt;
-        }
+            "title" =>
+            [
+                new(x => x.Title, desc),
+                new(x => x.Id, desc)
+            ],
+            "createdat" => [
+                new(x => x.CreatedAt, desc),
+                new(x => x.Title, desc)
+            ],
+            "updatedat" => [
+                new(x => x.UpdatedAt, desc),
+                new(x => x.Title, desc)
+            ],
+            _ => [
+                new(x => x.UpdatedAt, desc),
+                new(x => x.Title, desc)
+            ],
+        };
     }
 }

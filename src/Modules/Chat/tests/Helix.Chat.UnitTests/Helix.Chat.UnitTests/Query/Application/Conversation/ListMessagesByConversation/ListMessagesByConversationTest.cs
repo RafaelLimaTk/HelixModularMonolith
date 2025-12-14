@@ -262,21 +262,33 @@ public class ListMessagesByConversationTest(ListMessagesByConversationTestFixtur
             .Setup(x => x.Search(
                 It.Is<IQuerySpecification<MessageQueryModel>>(spec =>
                     spec.Criteria != null &&
-                    spec.Orders.Count == 1 &&
+                    spec.Orders.Count == 2 &&
                     spec.Page == input.Page &&
                     spec.PerPage == input.PerPage),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((IQuerySpecification<MessageQueryModel> spec, CancellationToken _) =>
             {
                 var predicate = spec.Criteria?.Compile() ?? (Func<MessageQueryModel, bool>)(m => true);
-                var order = spec.Orders.Single();
-                var keySelector = order.KeySelector.Compile();
+                var primaryOrder = spec.Orders[0];
+                var secondaryOrder = spec.Orders[1];
+                var primaryKeySelector = primaryOrder.KeySelector.Compile();
+                var secondaryKeySelector = secondaryOrder.KeySelector.Compile();
 
                 var filtered = listMessages.Where(predicate);
-                var ordered = order.Descending ? filtered.OrderByDescending(keySelector) : filtered.OrderBy(keySelector);
-                var list = ordered.ToList();
+                var ordered = primaryOrder.Descending
+                    ? filtered.OrderByDescending(primaryKeySelector)
+                    : filtered.OrderBy(primaryKeySelector);
 
-                return new SearchOutput<MessageQueryModel>(spec.Page, spec.PerPage, list.Count, list);
+                var finalOrdered = secondaryOrder.Descending
+                    ? ordered.ThenByDescending(secondaryKeySelector)
+                    : ordered.ThenBy(secondaryKeySelector);
+
+                return new SearchOutput<MessageQueryModel>(
+                    spec.Page,
+                    spec.PerPage,
+                    filtered.Count(),
+                    finalOrdered.ToList()
+                );
             });
         var useCase = new UseCase.ListMessagesByConversation(repositoryMock.Object);
 

@@ -59,11 +59,7 @@ public sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessag
     }
 
     private static (int page, int perPage) Normalize(int page, int perPage)
-    {
-        page = page <= 0 ? 1 : page;
-        perPage = perPage <= 0 ? 10 : perPage;
-        return (page, perPage);
-    }
+        => (page <= 0 ? 1 : page, perPage <= 0 ? 10 : perPage);
 
     private static FilterDefinition<MessageQueryModel> BuildFilter(string? search)
     {
@@ -81,11 +77,11 @@ public sealed class MessagesReadOnlyRepository(IChatReadDbContext ctx) : IMessag
 
     private static SortDefinition<MessageQueryModel> BuildSort(string? orderBy, SearchOrder order)
     {
-        var s = (orderBy ?? "sentAt").Trim();
+        var sortField = string.IsNullOrWhiteSpace(orderBy) ? "sentAt" : orderBy.Trim();
         var desc = order == SearchOrder.Desc;
         var sb = Builders<MessageQueryModel>.Sort;
 
-        return s.ToLowerInvariant() switch
+        return sortField.ToLowerInvariant() switch
         {
             "status" => desc
                 ? sb.Combine(sb.Descending(x => x.Status), sb.Descending(x => x.Id))
