@@ -1,36 +1,20 @@
 ﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 
 namespace Helix.Chat.Query.Data.Configurations;
 
-public sealed class ConversationConfiguration : IReadDbConfiguration
+public sealed class ConversationConfiguration : BaseMongoConfiguration<ConversationQueryModel>
 {
-    public string CollectionName => CollectionNames.Conversations;
-    public Type ModelType => typeof(ConversationQueryModel);
+    public override string CollectionName => CollectionNames.Conversations;
 
-    public void ConfigureClassMap()
+    public override void ConfigureIndexes(IMongoCollection<BsonDocument> col)
     {
-        if (BsonClassMap.IsClassMapRegistered(ModelType)) return;
-
-        BsonClassMap.RegisterClassMap<ConversationQueryModel>(cm =>
-        {
-            cm.AutoMap();
-            cm.SetIgnoreExtraElements(true);
-            cm.MapIdMember(x => x.Id);
-        });
-    }
-
-    public void ConfigureIndexes(IMongoCollection<BsonDocument> col)
-    {
-        var byParticipantUpdated = new CreateIndexModel<BsonDocument>(
-            Builders<BsonDocument>.IndexKeys
-                .Ascending("participant_ids")
-                .Descending("updated_at"));
-
-        var byUpdatedOnly = new CreateIndexModel<BsonDocument>(
-            Builders<BsonDocument>.IndexKeys
-                .Descending("updated_at"));
-
-        col.Indexes.CreateMany(new[] { byParticipantUpdated, byUpdatedOnly });
+        var byParticipantUpdated = Builders<BsonDocument>.IndexKeys
+            .Ascending("participant_ids").Descending("updated_at");
+        var byUpdatedOnly = Builders<BsonDocument>.IndexKeys
+            .Descending("updated_at");
+        col.Indexes.CreateMany([
+            new CreateIndexModel<BsonDocument>(byParticipantUpdated),
+            new CreateIndexModel<BsonDocument>(byUpdatedOnly)
+        ]);
     }
 }

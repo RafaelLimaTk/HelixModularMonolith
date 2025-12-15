@@ -1,8 +1,6 @@
-﻿using Helix.Chat.Query.Data.Configurations;
-using Helix.Chat.Query.Data.Conventions;
+﻿using Helix.Chat.Query.Data.Conventions;
 using Mongo2Go;
 using MongoDB.Bson;
-using Shared.Query.Extensions;
 
 namespace Helix.Chat.IntegrationTests.Query.Base;
 
@@ -21,7 +19,7 @@ public abstract class QueryBaseFixture : IDisposable
         Database = client.GetDatabase("integration-query-tests-db");
 
         Faker = new Faker("pt_BR");
-        RegisterReadModelConfigurations();
+        AutoRegisterMongoConfigurations();
     }
 
     public IChatReadDbContext CreateReadDbContext(bool preserveData = false)
@@ -32,20 +30,19 @@ public abstract class QueryBaseFixture : IDisposable
         return context;
     }
 
-    private void RegisterReadModelConfigurations()
+    private void AutoRegisterMongoConfigurations()
     {
-        var configurations = new IReadDbConfiguration[]
-        {
-            new MessageConfiguration(),
-            new ConversationConfiguration()
-        };
+        var configurations = MongoConfigurationLocator.FindAllConfigurations();
 
-        foreach (var configuration in configurations)
+        foreach (var cfg in configurations)
         {
-            configuration.ConfigureClassMap();
+            cfg.ConfigureClassMap();
 
-            var bsonCollection = Database.GetCollection<BsonDocument>(configuration.CollectionName);
-            configuration.ConfigureIndexes(bsonCollection);
+            if (cfg.CollectionName != null)
+            {
+                var bsonCollection = Database.GetCollection<BsonDocument>(cfg.CollectionName);
+                cfg.ConfigureIndexes(bsonCollection);
+            }
         }
     }
 
@@ -53,31 +50,20 @@ public abstract class QueryBaseFixture : IDisposable
     {
         private readonly IMongoDatabase _database = database;
 
-        private static readonly Dictionary<Type, string> _collectionMappings = new()
-        {
-            { typeof(ConversationQueryModel), CollectionNames.Conversations },
-            { typeof(MessageQueryModel), CollectionNames.Messages }
-        };
+        private readonly Dictionary<Type, string> _collectionMappings
+            = MongoConfigurationLocator.GetCollectionMappings();
 
-        public IMongoCollection<T> GetCollection<T>(string? name = null)
-        {
-            if (!string.IsNullOrEmpty(name))
-                return _database.GetCollection<T>(name);
-
-            var type = typeof(T);
-            if (_collectionMappings.TryGetValue(type, out var collectionName))
-                return _database.GetCollection<T>(collectionName);
-
-            var fallbackName = type.Name.ToSnakeCase();
-            return _database.GetCollection<T>(fallbackName);
-        }
+        public IMongoCollection<T> GetCollection<T>(string? name)
+            => _database.GetCollection<T>(name);
 
         public void EnsureDeleted()
-            => CollectionNames.ListCollectionNames().ForEach(collectionName =>
+        {
+            foreach (var collectionName in _collectionMappings.Values.Distinct())
             {
                 var collection = _database.GetCollection<BsonDocument>(collectionName);
                 collection.DeleteMany(FilterDefinition<BsonDocument>.Empty);
-            });
+            }
+        }
     }
 
     public void Dispose()

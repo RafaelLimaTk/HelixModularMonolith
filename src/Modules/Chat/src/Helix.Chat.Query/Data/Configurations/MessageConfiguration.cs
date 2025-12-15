@@ -1,25 +1,12 @@
 ﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 
 namespace Helix.Chat.Query.Data.Configurations;
 
-public sealed class MessageConfiguration : IReadDbConfiguration
+public sealed class MessageConfiguration : BaseMongoConfiguration<MessageQueryModel>
 {
-    public string CollectionName => CollectionNames.Messages;
-    public Type ModelType => typeof(MessageQueryModel);
+    public override string CollectionName => CollectionNames.Messages;
 
-    public void ConfigureClassMap()
-    {
-        if (BsonClassMap.IsClassMapRegistered(ModelType)) return;
-        BsonClassMap.RegisterClassMap<MessageQueryModel>(cm =>
-        {
-            cm.AutoMap();
-            cm.SetIgnoreExtraElements(true);
-            cm.MapIdMember(x => x.Id);
-        });
-    }
-
-    public void ConfigureIndexes(IMongoCollection<BsonDocument> col)
+    public override void ConfigureIndexes(IMongoCollection<BsonDocument> col)
     {
         var byConvSent = Builders<BsonDocument>.IndexKeys
             .Ascending("conversation_id").Ascending("sent_at");
