@@ -1,6 +1,7 @@
 ﻿using Helix.Chat.Query.Data.Conventions;
 using Mongo2Go;
 using MongoDB.Bson;
+using Shared.Query.Extensions;
 
 namespace Helix.Chat.IntegrationTests.Query.Base;
 
@@ -53,8 +54,18 @@ public abstract class QueryBaseFixture : IDisposable
         private readonly Dictionary<Type, string> _collectionMappings
             = MongoConfigurationLocator.GetCollectionMappings();
 
-        public IMongoCollection<T> GetCollection<T>(string? name)
-            => _database.GetCollection<T>(name);
+        public IMongoCollection<T> GetCollection<T>(string? name = null)
+        {
+            if (!string.IsNullOrEmpty(name))
+                return _database.GetCollection<T>(name);
+
+            var type = typeof(T);
+            if (_collectionMappings.TryGetValue(type, out var collectionName))
+                return _database.GetCollection<T>(collectionName);
+
+            var fallbackName = type.Name.ToSnakeCase();
+            return _database.GetCollection<T>(fallbackName);
+        }
 
         public void EnsureDeleted()
         {
