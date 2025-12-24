@@ -16,7 +16,7 @@ public static class ChatModule
     public static IServiceCollection AddChatModule(this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Database");
+        var connectionString = configuration.GetConnectionString("ChatDatabase");
         services.AddDbContext<HelixChatDbContext>(options =>
             options
                 .UseNpgsql(connectionString, npgsql =>

@@ -1,0 +1,23 @@
+﻿version: '3.8'
+
+services:
+  postgres-e2e:
+    container_name: helix-postgres-e2e
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: dbHelix_dev_e2e
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: H3L1X.@
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+
+  mongo-e2e:
+    container_name: helix-mongo-e2e
+    image: mongo:7-jammy
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: H3L1X.@
+      MONGO_INITDB_DATABASE: helix_e2e

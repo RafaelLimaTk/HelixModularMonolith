@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿namespace Helix.Chat.Infra.Data.EF;
 
-namespace Helix.Chat.Infra.Data.EF;
 public class HelixChatDbContext(
     DbContextOptions<HelixChatDbContext> options
     ) : DbContext(options)
