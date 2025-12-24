@@ -2,6 +2,7 @@
 
 public sealed class OutboxProcessorOptions
 {
+    public bool Enabled { get; set; } = true;
     public int BatchSize { get; set; } = 100;
     public int EmptyQueueDelaySeconds { get; set; } = 5;
     public int PartialBatchDelaySeconds { get; set; } = 1;

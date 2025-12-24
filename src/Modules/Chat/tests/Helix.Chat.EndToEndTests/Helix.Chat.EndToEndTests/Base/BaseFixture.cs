@@ -1,15 +1,14 @@
 using Bogus;
-using Helix.Chat.Infra.Data.EF;
-using Microsoft.EntityFrameworkCore;
+using Helix.Api;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
+using Shared.Infra.Outbox.Interfaces;
 
 namespace Helix.Chat.EndToEndTests.Base;
 
 public class BaseFixture
 {
     protected Faker Faker { get; set; }
-    public CustomWebApplicationFactory<Program> WebAppFactory { get; set; }
+    public CustomWebApplicationFactory<IApiMarker> WebAppFactory { get; set; }
     public HttpClient HttpClient { get; set; }
     public ApiClient ApiClient { get; set; }
     private readonly string? _dbConnectionString;
@@ -17,7 +16,7 @@ public class BaseFixture
     public BaseFixture()
     {
         Faker = new Faker("pt_BR");
-        WebAppFactory = new CustomWebApplicationFactory<Program>();
+        WebAppFactory = new CustomWebApplicationFactory<IApiMarker>();
         HttpClient = WebAppFactory.CreateClient();
         ApiClient = new ApiClient(HttpClient);
         var configuration = WebAppFactory.Services.GetService(typeof(IConfiguration));
@@ -45,5 +44,11 @@ public class BaseFixture
         var context = CreateDbContext();
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
+    }
+
+    public async Task ProcessOutboxAsync(CancellationToken cancellationToken = default)
+    {
+        var processor = WebAppFactory.Services.GetRequiredService<IOutboxProcessor>();
+        await processor.ProcessPendingAsync(cancellationToken);
     }
 }

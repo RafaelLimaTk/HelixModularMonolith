@@ -83,7 +83,7 @@ public sealed class ApiClient
     }
 
     private async Task<TOutput?> GetOutput<TOutput>(HttpResponseMessage response)
-    where TOutput : class
+        where TOutput : class
     {
         var responseContent = await response.Content.ReadAsStringAsync();
         TOutput? output = null;

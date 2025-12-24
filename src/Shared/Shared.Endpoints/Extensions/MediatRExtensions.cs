@@ -2,6 +2,7 @@
 using System.Reflection;
 
 namespace Shared.Endpoints.Extensions;
+
 public static class MediatRExtensions
 {
     public static IServiceCollection AddMediatRWithAssemblies

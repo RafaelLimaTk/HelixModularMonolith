@@ -28,7 +28,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Bootstrapper\Helix.Api\Helix.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\Helix.Chat.Application\Helix.Chat.Application.csproj" />
     <ProjectReference Include="..\..\..\src\Helix.Chat.Endpoints\Helix.Chat.Endpoints.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<None Update="xunit.runner.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

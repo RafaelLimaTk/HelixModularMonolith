@@ -3,6 +3,7 @@ using Shared.Infra.Outbox.Interfaces;
 using System.Text.Json;
 
 namespace Helix.Chat.Infra.Data.EF;
+
 public class UnitOfWork
     : IUnitOfWork
 {
@@ -26,18 +27,20 @@ public class UnitOfWork
     {
         var aggregateRoots = _context.ChangeTracker
             .Entries<AggregateRoot>()
-            .Where(entry => entry.Entity.Events.Any())
-            .Select(entry => entry.Entity);
+            .Where(entry => entry.Entity.Events.Count != 0)
+            .Select(entry => entry.Entity)
+            .ToList();
 
         _logger.LogInformation(
             "Commit: {AggregatesCount} aggregate roots with events.",
-            aggregateRoots.Count());
+            aggregateRoots.Count);
 
         var events = aggregateRoots
-            .SelectMany(aggregate => aggregate.Events);
+            .SelectMany(aggregate => aggregate.Events)
+            .ToList();
 
         _logger.LogInformation(
-            "Commit: {EventsCount} events raised.", events.Count());
+            "Commit: {EventsCount} events raised.", events.Count);
 
         foreach (var @event in events)
         {

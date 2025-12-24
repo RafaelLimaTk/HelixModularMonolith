@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Helix.Chat.Infra.Data.EF.Configurations;
+
 internal class ConversationConfiguration
     : IEntityTypeConfiguration<Conversation>
 {
@@ -16,7 +17,7 @@ internal class ConversationConfiguration
         builder.OwnsMany<Participant>(nameof(Conversation.Participants),
         navigation =>
         {
-            navigation.ToTable("ConversationsParticipants");
+            navigation.ToTable("conversations_participants");
             navigation.WithOwner()
                 .HasForeignKey("ConversationId");
             navigation.Property<Guid>("Id");

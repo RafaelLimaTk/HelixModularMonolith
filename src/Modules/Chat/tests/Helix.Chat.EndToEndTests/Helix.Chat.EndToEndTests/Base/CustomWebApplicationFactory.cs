@@ -1,7 +1,6 @@
-﻿using Helix.Chat.Infra.Data.EF;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
+using Shared.Infra.Outbox.Configuration;
 
 namespace Helix.Chat.EndToEndTests.Base;
 
@@ -14,6 +13,16 @@ public class CustomWebApplicationFactory<TStartup>
         builder.UseEnvironment("EndToEndTest");
         builder.ConfigureServices(services =>
         {
+            var outboxOptionsDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(OutboxProcessorOptions));
+
+            if (outboxOptionsDescriptor != null)
+            {
+                services.Remove(outboxOptionsDescriptor);
+            }
+
+            services.AddSingleton(new OutboxProcessorOptions { Enabled = false });
+
             var serviceProvider = services.BuildServiceProvider();
 
             using var scope = serviceProvider.CreateScope();

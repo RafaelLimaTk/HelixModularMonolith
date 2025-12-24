@@ -1,13 +1,11 @@
 ﻿using Helix.Chat.Infra.Data.EF;
 using Helix.Chat.Query;
 using Helix.Chat.Query.Data.Context;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Endpoints.Extensions;
 using Shared.Infra.Outbox;
-using Shared.Infra.Outbox.Interfaces;
 
 namespace Helix.Chat.Endpoints;
 
@@ -30,7 +28,6 @@ public static class ChatModule
         services.Configure<MongoSettings>(options =>
             configuration.GetSection("Mongo:Chat").Bind(options));
 
-        services.AddMediatRWithAssemblies(ChatAssemblies.All);
         services.AddDomainEventsWithAssemblies(ChatAssemblies.All);
         services.AddReadModelScanning(ChatAssemblies.All);
 
@@ -41,15 +38,7 @@ public static class ChatModule
         {
             options.BatchSize = 50;
             options.EnableParallelProcessing = true;
-        });
-
-        var typeResolver = services.BuildServiceProvider()
-            .GetRequiredService<ITypeResolver>();
-
-        foreach (var assembly in ChatAssemblies.All)
-        {
-            typeResolver.RegisterAssembly(assembly);
-        }
+        }, ChatAssemblies.All);
 
         return services;
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.SeedWorks;
@@ -8,7 +8,7 @@ using Shared.Infra.Outbox.Models;
 using System.Diagnostics;
 using System.Text.Json;
 
-public sealed class OutboxProcessor : BackgroundService
+public sealed class OutboxProcessor : BackgroundService, IOutboxProcessor
 {
     private readonly ILogger<OutboxProcessor> _logger;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -34,6 +34,12 @@ public sealed class OutboxProcessor : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!_options.Enabled)
+        {
+            _logger.LogInformation("Outbox processor is disabled");
+            return;
+        }
+
         _logger.LogInformation(
             "Outbox processor started. BatchSize: {BatchSize}, EmptyQueueDelay: {EmptyDelay}s, ParallelProcessing: {Parallel}",
             _options.BatchSize,
@@ -59,6 +65,35 @@ public sealed class OutboxProcessor : BackgroundService
         }
 
         _logger.LogInformation("Outbox processor stopped");
+    }
+
+    public async Task ProcessPendingAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Processing pending outbox messages manually");
+
+        bool hasMore;
+        do
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
+            var messages = await store.TakeBatchAsync(_options.BatchSize, cancellationToken);
+
+            if (messages.Count == 0)
+                break;
+
+            if (_options.EnableParallelProcessing)
+            {
+                await ProcessMessagesInParallelAsync(messages, store, cancellationToken);
+            }
+            else
+            {
+                await ProcessMessagesSequentiallyAsync(messages, store, cancellationToken);
+            }
+
+            hasMore = messages.Count == _options.BatchSize;
+        } while (hasMore);
+
+        _logger.LogInformation("Finished processing pending outbox messages");
     }
 
     private async Task ProcessBatchAsync(CancellationToken cancellationToken)
