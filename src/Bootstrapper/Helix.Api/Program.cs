@@ -11,9 +11,13 @@ builder.Services
 builder.Services
     .AddChatModule(builder.Configuration);
 
+builder.Services
+    .AddExceptionHandler<CustomExceptionHandler>();
+
 var app = builder.Build();
 
 app.MapCarter();
+app.UseExceptionHandler(options => { });
 
 app.UseChatModule();
 

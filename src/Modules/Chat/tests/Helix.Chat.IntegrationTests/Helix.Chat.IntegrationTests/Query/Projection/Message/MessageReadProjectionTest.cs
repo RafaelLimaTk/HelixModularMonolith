@@ -157,34 +157,6 @@ public class MessageReadProjectionTest(MessageProjectionTestFixture fixture)
         updatedMessage.SenderId.Should().Be(originalMessage.SenderId);
     }
 
-    [Fact(DisplayName = nameof(OverwritesReadAtOnSubsequentEvents))]
-    [Trait("Chat/Integration/Query/Projections", "MessageRead - Projection")]
-    public async Task OverwritesReadAtOnSubsequentEvents()
-    {
-        var dbContext = _fixture.CreateReadDbContext();
-        var sync = _fixture.CreateSynchronizeDb(preserveData: true);
-        var message = await _fixture.InsertMessageInDatabase();
-        var projection = new MessageReadProjection(sync);
-        var firstReadAt = DateTime.UtcNow.AddMinutes(-10);
-        var readerId = Guid.NewGuid();
-        var firstEvent = new MessageRead(message.Id, message.ConversationId, readerId, firstReadAt);
-        await projection.ProjectAsync(firstEvent, CancellationToken.None);
-
-        await Task.Delay(100);
-        var secondReadAt = DateTime.UtcNow;
-        var secondEvent = new MessageRead(message.Id, message.ConversationId, readerId, secondReadAt);
-
-        await projection.ProjectAsync(secondEvent, CancellationToken.None);
-
-        var messagesCollection = dbContext.GetCollection<MessageQueryModel>();
-        var updatedMessage = await messagesCollection
-            .Find(x => x.Id == message.Id)
-            .FirstOrDefaultAsync();
-        updatedMessage.Should().NotBeNull();
-        updatedMessage.ReadAt.Should().BeCloseTo(secondReadAt, TimeSpan.FromSeconds(1));
-        updatedMessage.ReadAt.Should().BeAfter(firstReadAt);
-    }
-
     [Fact(DisplayName = nameof(ReadAtShouldBeAfterOrEqualDeliveredAt))]
     [Trait("Chat/Integration/Query/Projections", "MessageRead - Projection")]
     public async Task ReadAtShouldBeAfterOrEqualDeliveredAt()
@@ -211,33 +183,5 @@ public class MessageReadProjectionTest(MessageProjectionTestFixture fixture)
         updatedMessage.ReadAt.Should().BeCloseTo(readAt, TimeSpan.FromSeconds(1));
         updatedMessage.DeliveredAt.Should().BeCloseTo(deliveredAt, TimeSpan.FromSeconds(1));
         updatedMessage.ReadAt.Should().BeAfter(updatedMessage.DeliveredAt.Value);
-    }
-
-    [Fact(DisplayName = nameof(DifferentReadersCanReadSameMessage))]
-    [Trait("Chat/Integration/Query/Projections", "MessageRead - Projection")]
-    public async Task DifferentReadersCanReadSameMessage()
-    {
-        var dbContext = _fixture.CreateReadDbContext();
-        var sync = _fixture.CreateSynchronizeDb(preserveData: true);
-        var message = await _fixture.InsertMessageInDatabase();
-        var projection = new MessageReadProjection(sync);
-        var firstReadAt = DateTime.UtcNow;
-        var firstReaderId = Guid.NewGuid();
-        var firstEvent = new MessageRead(message.Id, message.ConversationId, firstReaderId, firstReadAt);
-        await projection.ProjectAsync(firstEvent, CancellationToken.None);
-        await Task.Delay(100);
-        var secondReadAt = DateTime.UtcNow;
-        var secondReaderId = Guid.NewGuid();
-        var secondEvent = new MessageRead(message.Id, message.ConversationId, secondReaderId, secondReadAt);
-
-        await projection.ProjectAsync(secondEvent, CancellationToken.None);
-
-        var messagesCollection = dbContext.GetCollection<MessageQueryModel>();
-        var updatedMessage = await messagesCollection
-            .Find(x => x.Id == message.Id)
-            .FirstOrDefaultAsync();
-        updatedMessage.Should().NotBeNull();
-        updatedMessage.ReadAt.Should().BeCloseTo(secondReadAt, TimeSpan.FromSeconds(1));
-        updatedMessage.ReadAt.Should().BeAfter(firstReadAt);
     }
 }

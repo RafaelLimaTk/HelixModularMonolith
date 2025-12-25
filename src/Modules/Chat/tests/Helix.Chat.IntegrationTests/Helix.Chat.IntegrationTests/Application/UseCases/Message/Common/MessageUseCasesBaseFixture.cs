@@ -25,6 +25,8 @@ public class MessageUseCasesBaseFixture : BaseFixture
 
     public string GetLongContent(int length)
     {
+        if (length <= 0) return string.Empty;
+
         var builder = new StringBuilder();
 
         while (builder.Length < length)
@@ -38,15 +40,7 @@ public class MessageUseCasesBaseFixture : BaseFixture
             builder.Append(sentence);
         }
 
-        var result = builder.ToString().Trim();
-        if (result.Length <= length)
-        {
-            var extra = Faker.Lorem.Sentence().Trim();
-            if (extra.Length > 0)
-                result = string.Concat(result, " ", extra);
-        }
-
-        return result;
+        return builder.ToString()[..length];
     }
 
     public DomainEntity.Conversation GetExampleConversation(

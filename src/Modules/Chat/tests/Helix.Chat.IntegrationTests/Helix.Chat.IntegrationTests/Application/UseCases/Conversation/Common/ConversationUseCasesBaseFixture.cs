@@ -1,51 +1,23 @@
-﻿using System.Text;
-
-namespace Helix.Chat.IntegrationTests.Application.UseCases.Conversation.Common;
+﻿namespace Helix.Chat.IntegrationTests.Application.UseCases.Conversation.Common;
 
 public class ConversationUseCasesBaseFixture : BaseFixture
 {
-    public string GetShortTitle(int length)
+    public string GetValidTitle()
     {
-        if (length <= 0) return string.Empty;
-
-        var word = Faker.Lorem.Word().Replace(" ", "");
-        if (word.Length >= length) return word[..length];
-
-        var builder = new StringBuilder(word);
-        while (builder.Length < length)
-        {
-            var next = Faker.Random.AlphaNumeric(Math.Min(length - builder.Length, 8));
-            builder.Append(next);
-        }
-        return builder.ToString()[..length];
+        var conversationTitle = "";
+        while (conversationTitle.Length < 3)
+            conversationTitle = Faker.Lorem.Sentence(3);
+        if (conversationTitle.Length > 128)
+            conversationTitle = conversationTitle[..128];
+        return conversationTitle;
     }
 
-    public string GetValidTitle()
-        => Faker.Lorem.Sentence(3).Trim();
-
-    public string GetLongTitle(int length)
+    public string GetInvalidTitleTooLong(int length)
     {
-        var builder = new StringBuilder();
-        while (builder.Length < length)
-        {
-            var word = Faker.Lorem.Word().Trim();
-            if (word.Length == 0) continue;
-
-            if (builder.Length > 0)
-                builder.Append(' ');
-
-            builder.Append(word);
-        }
-
-        var result = builder.ToString().Trim();
-        if (result.Length <= length)
-        {
-            var extra = Faker.Lorem.Word().Trim();
-            if (extra.Length > 0)
-                result = string.Concat(result, " ", extra);
-        }
-
-        return result.Trim();
+        var tooLongTitleForConversation = Faker.Lorem.Paragraph();
+        while (tooLongTitleForConversation.Length <= length)
+            tooLongTitleForConversation = $"{tooLongTitleForConversation} {Faker.Lorem.Paragraph()}";
+        return tooLongTitleForConversation;
     }
 
     public List<Guid> GetParticipantIds(int count = 2)
@@ -53,48 +25,29 @@ public class ConversationUseCasesBaseFixture : BaseFixture
             .Select(_ => Guid.NewGuid())
             .ToList();
 
-    public Domain.Entities.Conversation GetExampleConversation(
-        int titleLength = 10,
+    public DomainEntity.Conversation GetExampleConversation(
         List<Guid>? participantIds = null)
     {
-        var conversation = new Domain.Entities.Conversation(GetShortTitle(titleLength));
-
+        var conversation = new DomainEntity.Conversation(GetValidTitle());
         participantIds?.ForEach(userId => conversation.AddParticipant(userId));
-
         return conversation;
     }
 
-    public List<Domain.Entities.Conversation> GetExampleConversationsList(int count = 5)
-        => Enumerable.Range(0, count)
-            .Select(_ => GetExampleConversation())
-            .ToList();
-
     public string GetValidContent()
-        => Faker.Lorem.Sentence();
-
-    public string GetLongContent(int length)
     {
-        var builder = new StringBuilder();
+        var messageContent = "";
+        while (messageContent.Length < 10)
+            messageContent = Faker.Lorem.Sentence(10);
+        if (messageContent.Length > 10_000)
+            messageContent = messageContent[..10_000];
+        return messageContent;
+    }
 
-        while (builder.Length < length)
-        {
-            var sentence = Faker.Lorem.Sentence().Trim();
-            if (sentence.Length == 0) continue;
-
-            if (builder.Length > 0)
-                builder.Append(' ');
-
-            builder.Append(sentence);
-        }
-
-        var result = builder.ToString().Trim();
-        if (result.Length <= length)
-        {
-            var extra = Faker.Lorem.Sentence().Trim();
-            if (extra.Length > 0)
-                result = string.Concat(result, " ", extra);
-        }
-
-        return result.Trim();
+    public string GetInvalidContentTooLong(int length)
+    {
+        var tooLongContentForConversation = Faker.Lorem.Paragraph();
+        while (tooLongContentForConversation.Length <= length)
+            tooLongContentForConversation = $"{tooLongContentForConversation} {Faker.Lorem.Paragraph()}";
+        return tooLongContentForConversation;
     }
 }

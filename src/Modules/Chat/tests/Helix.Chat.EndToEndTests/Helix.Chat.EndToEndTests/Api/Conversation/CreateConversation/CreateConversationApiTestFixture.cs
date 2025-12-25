@@ -12,7 +12,7 @@ public class CreateConversationApiTestFixture
     : ConversationBaseFixture
 {
     public CreateConversationInput GetValidInput()
-        => new(Faker.Lorem.Sentence(3));
+        => new(GetValidConversationTitle());
 
     public CreateConversationInput GetInvalidInput()
         => new(string.Empty);

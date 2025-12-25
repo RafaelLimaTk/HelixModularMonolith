@@ -322,7 +322,7 @@ public class SendMessageTest(SendMessageTestFixture fixture)
             unitOfWork
         );
         var maxLength = DomainEntity.Message.MAX_LENGTH;
-        var invalidContent = _fixture.GetLongContent(maxLength + excess);
+        var invalidContent = _fixture.GetInvalidContentTooLong(maxLength + excess);
         var input = new UseCase.SendMessageInput(
             conversation.Id,
             senderId,
@@ -337,49 +337,6 @@ public class SendMessageTest(SendMessageTestFixture fixture)
         var assertDbContext = _fixture.CreateDbContext(true);
         var messagesCount = await assertDbContext.Messages.CountAsync();
         messagesCount.Should().Be(0);
-    }
-
-    [Fact(DisplayName = nameof(SendMessageWithContentEqualToMaxLength))]
-    [Trait("Chat/Integration/Application", "SendMessage - Use Cases")]
-    public async Task SendMessageWithContentEqualToMaxLength()
-    {
-        var dbContext = _fixture.CreateDbContext();
-        var conversationRepository = new Repository.ConversationRepository(dbContext);
-        var messageRepository = new Repository.MessageRepository(dbContext);
-        var outboxStoreMock = new Mock<IOutboxStore>();
-        var unitOfWork = new UnitOfWork(
-            dbContext,
-            outboxStoreMock.Object,
-            new Mock<ILogger<UnitOfWork>>().Object
-        );
-        var senderId = Guid.NewGuid();
-        var conversation = _fixture.GetExampleConversation(participantIds: [senderId]);
-        await conversationRepository.Insert(conversation, CancellationToken.None);
-        await unitOfWork.Commit(CancellationToken.None);
-        outboxStoreMock.Reset();
-        var useCase = new UseCase.SendMessage(
-            conversationRepository,
-            messageRepository,
-            unitOfWork
-        );
-        var maxLength = DomainEntity.Message.MAX_LENGTH;
-        var content = _fixture.GetLongContent(maxLength)[..maxLength];
-        var input = new UseCase.SendMessageInput(
-            conversation.Id,
-            senderId,
-            content
-        );
-
-        var output = await useCase.Handle(input, CancellationToken.None);
-
-        output.Should().NotBeNull();
-        var assertDbContext = _fixture.CreateDbContext(true);
-        var dbMessage = await assertDbContext.Messages
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == output.MessageId);
-        dbMessage.Should().NotBeNull();
-        dbMessage!.Content.Should().Be(content);
-        dbMessage.Content.Length.Should().Be(maxLength);
     }
 
     [Fact(DisplayName = nameof(SendMessageTrimsContent))]

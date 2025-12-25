@@ -13,11 +13,13 @@ public class SendMessageTestFixture
     public string GetValidContent()
         => Faker.Lorem.Sentence();
 
-    public string GetLongContent(int lenghtContent = 10000)
+    public string GetLongContent(int lengthContent = 10000)
     {
+        if (lengthContent <= 0) return string.Empty;
+
         var builder = new StringBuilder();
 
-        while (builder.Length < lenghtContent)
+        while (builder.Length < lengthContent)
         {
             var sentence = Faker.Lorem.Sentence().Trim();
             if (sentence.Length == 0) continue;
@@ -28,14 +30,6 @@ public class SendMessageTestFixture
             builder.Append(sentence);
         }
 
-        var result = builder.ToString().Trim();
-        if (result.Length <= lenghtContent)
-        {
-            var extra = Faker.Lorem.Sentence().Trim();
-            if (extra.Length > 0)
-                result = string.Concat(result, " ", extra);
-        }
-
-        return result;
+        return builder.ToString()[..lengthContent];
     }
 }
