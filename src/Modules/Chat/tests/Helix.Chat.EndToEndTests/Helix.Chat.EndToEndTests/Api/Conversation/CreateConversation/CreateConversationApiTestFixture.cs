@@ -1,5 +1,4 @@
 using Helix.Chat.Application.UseCases.Conversation.CreateConversation;
-using Helix.Chat.EndToEndTests.Api.Conversation.Common;
 
 namespace Helix.Chat.EndToEndTests.Api.Conversation.CreateConversation;
 

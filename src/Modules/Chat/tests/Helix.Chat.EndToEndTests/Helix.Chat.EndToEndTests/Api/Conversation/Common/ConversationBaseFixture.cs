@@ -31,4 +31,12 @@ public class ConversationBaseFixture
             tooLongTitleForConversation = $"{tooLongTitleForConversation} {Faker.Lorem.Paragraph()}";
         return tooLongTitleForConversation;
     }
+
+    public DomainEntity.Conversation GetExampleConversation()
+        => new(GetValidConversationTitle());
+
+    public List<DomainEntity.Conversation> GetExampleConversationsList(int count = 10)
+        => Enumerable.Range(0, count)
+            .Select(_ => GetExampleConversation())
+            .ToList();
 }
