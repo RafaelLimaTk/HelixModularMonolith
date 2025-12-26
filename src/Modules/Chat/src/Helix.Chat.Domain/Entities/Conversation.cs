@@ -6,10 +6,10 @@ using Shared.Domain.SeedWorks;
 using Shared.Domain.Validations;
 
 namespace Helix.Chat.Domain.Entities;
+
 public sealed class Conversation : AggregateRoot
 {
-    private readonly HashSet<Guid> _participantIds = new();
-    private readonly List<Participant> _participants = new();
+    private readonly List<Participant> _participants = [];
 
     public string Title { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -31,7 +31,7 @@ public sealed class Conversation : AggregateRoot
         if (userId == Guid.Empty)
             throw new EntityValidationException("UserId should not be empty");
 
-        if (!_participantIds.Add(userId)) return false;
+        if (_participants.Any(p => p.UserId == userId)) return false;
         var joinedAt = DateTime.UtcNow;
         _participants.Add(new Participant(userId, joinedAt));
         RaiseEvent(new ParticipantAdded(Id, userId, joinedAt));
@@ -41,7 +41,7 @@ public sealed class Conversation : AggregateRoot
 
     public Message SendMessage(Guid senderId, string content)
     {
-        if (!_participantIds.Contains(senderId))
+        if (!_participants.Any(p => p.UserId == senderId))
             throw new EntityValidationException("SenderId must be a participant of the conversation");
 
         var message = new Message(this.Id, senderId, content);
